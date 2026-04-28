@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar - Elysia Perpus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script type="importmap">{ "imports": { "@material/web/": "https://esm.run/@material/web/" } }</script>
+    <script type="module">import '@material/web/all.js';</script>
+    <style>
+        :root { --md-sys-color-background: #fdfcff; --md-sys-color-surface-container: #f3edf7; --md-sys-color-primary: #6750a4; }
+        body { background-color: var(--md-sys-color-background); display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Roboto', sans-serif; margin: 0; }
+        .card { background-color: var(--md-sys-color-surface-container); border-radius: 24px; padding: 32px; width: 100%; max-width: 360px; text-align: center; }
+        form { display: flex; flex-direction: column; gap: 16px; margin-top: 24px;}
+        md-outlined-text-field { width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 style="color: var(--md-sys-color-primary); margin: 0;">Daftar Akun</h1>
+        <form onsubmit="event.preventDefault(); prosesDaftar();">
+            <md-outlined-text-field id="username" label="Buat Username" required></md-outlined-text-field>
+            <md-outlined-text-field id="password" label="Buat Password" type="password" required></md-outlined-text-field>
+            <md-filled-button type="submit" style="width: 100%; margin-top: 8px;">Daftar Sekarang</md-filled-button>
+        </form>
+        <div style="margin-top: 16px;">
+            <md-text-button onclick="window.location.href='/login.html'">Sudah punya akun? Login</md-text-button>
+        </div>
+    </div>
+    <md-dialog id="dlg"><div slot="content" id="dlgMsg"></div><div slot="actions"><md-filled-button id="btnClose" onclick="dlg.close()">Tutup</md-filled-button></div></md-dialog>
+
+    <script>
+        async function prosesDaftar() {
+            const res = await fetch('/api/register', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username.value, password: password.value })
+            });
+            const data = await res.json();
+            dlgMsg.innerText = data.message;
+            dlg.show();
+            if (data.status === 'sukses') btnClose.addEventListener('click', () => window.location.href = '/login.html');
+        }
+    </script>
+</body>
+</html>
