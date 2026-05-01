@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    
     <script type="importmap">
     { "imports": { "@material/web/": "https://esm.run/@material/web/" } }
     </script>
@@ -18,35 +21,76 @@
     </script>
 
     <style>
+        :not(:defined) { display: none !important; }
+
         :root { --md-sys-color-background: #fdfcff; --md-sys-color-surface: #f3edf7; --md-sys-color-primary: #6750a4; --md-sys-color-outline: #cac4d0; }
-        body { background: var(--md-sys-color-background); color: #1a1c1e; font-family: 'Roboto'; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 260px; background: var(--md-sys-color-surface); border-right: 1px solid var(--md-sys-color-outline); display: flex; flex-direction: column; transition: 0.3s; overflow: hidden; white-space: nowrap; }
-        .sidebar.hidden { width: 0; border: none; }
-        .nav-item { display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-radius: 8px; cursor: pointer; color: #49454f; font-weight: 500; transition: 0.2s; }
-        .nav-item:hover { background: rgba(103, 80, 164, 0.08); color: var(--md-sys-color-primary); }
-        .nav-item.active { background: var(--md-sys-color-primary); color: white; }
         
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--md-sys-color-outline); }
-        .content-container { padding: 32px; max-width: 900px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+        body { 
+            background: var(--md-sys-color-background); 
+            color: #1a1c1e; 
+            font-family: 'Roboto', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            animation: fadeInBody 0.4s ease forwards;
+        }
+
+        @keyframes fadeInBody { from { opacity: 0; } to { opacity: 1; } }
+
+        .sidebar { width: 260px; background: linear-gradient(180deg, var(--md-sys-color-surface) 0%, #faf8fc 100%); border-right: 1px solid var(--md-sys-color-outline); display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; white-space: nowrap; box-shadow: 2px 0 16px rgba(0, 0, 0, 0.03); z-index: 10; }
+        .sidebar.hidden { width: 0; border: none; opacity: 0.5; }
+        .nav-item { display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-radius: 8px; cursor: pointer; color: #49454f; font-weight: 500; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); margin-bottom: 4px; }
+        .nav-item:hover { background: rgba(103, 80, 164, 0.08); color: var(--md-sys-color-primary); transform: translateX(6px); }
+        .nav-item.active { background: linear-gradient(90deg, var(--md-sys-color-primary) 0%, #856bce 100%); color: white; box-shadow: 0 4px 12px rgba(103, 80, 164, 0.25); transform: scale(1.02) translateX(4px); }
+        .logo-icon { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .sidebar:not(.hidden) .logo-icon { transform: rotate(-10deg) scale(1.1); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; scroll-behavior: smooth; }
+        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--md-sys-color-outline); background: rgba(253, 252, 255, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 5; }
+        .content-container { padding: 32px; max-width: 1000px; width: 100%; margin: 0 auto; box-sizing: border-box; }
         
-        .panel { display: none; animation: fadeIn 0.3s; } .panel.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        .panel { display: none; } 
+        .panel.active { display: block; animation: smoothSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        @keyframes smoothSlideUp { 0% { opacity: 0; transform: translateY(20px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
-        .grid-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; }
-        .book-card { background: white; border: 1px solid var(--md-sys-color-outline); border-radius: 12px; padding: 16px; cursor: pointer; transition: 0.2s; }
-        .book-card:hover { border-color: var(--md-sys-color-primary); transform: translateY(-4px); }
+        .grid-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .book-card { background: white; border: 1px solid var(--md-sys-color-outline); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; }
+        .book-card:hover { border-color: var(--md-sys-color-primary); transform: translateY(-6px); box-shadow: 0 8px 24px rgba(103, 80, 164, 0.12); }
+        
+        .book-cover, .book-cover-placeholder { width: 100%; height: 260px; object-fit: cover; border-bottom: 1px solid var(--md-sys-color-outline); }
+        .book-cover-placeholder { display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: var(--md-sys-color-outline); }
+        
+        .book-info { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+        
+        .stock-label { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .stock-ok { background: rgba(20, 108, 46, 0.1); color: #146c2e; }
+        .stock-empty { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
 
-        .avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--md-sys-color-primary); margin-bottom: 16px; background: #eee; }
-        .admin-stat { background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); text-align: center; }
-        .admin-stat h3 { margin: 0; font-size: 32px; color: var(--md-sys-color-primary); }
+        .avatar, .avatar-placeholder { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--md-sys-color-primary); margin-bottom: 16px; transition: transform 0.3s; }
+        .avatar-placeholder { display: flex; align-items: center; justify-content: center; background: #eee; color: #9e9e9e; margin: 0 auto 16px auto; }
+        .avatar:hover, .avatar-placeholder:hover { transform: scale(1.05); }
+
+        .nav-avatar, .nav-avatar-placeholder { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--md-sys-color-primary); }
+        .nav-avatar-placeholder { display: flex; align-items: center; justify-content: center; background: #eee; color: var(--md-sys-color-primary); font-size: 18px; }
+
+        .admin-stat { background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); text-align: center; transition: all 0.3s; }
+        .admin-stat:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+        .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--md-sys-color-outline); padding-bottom: 16px; overflow-x: auto; }
+        .admin-sec { display: none; animation: fadeIn 0.4s ease; }
+        .admin-sec.active { display: block; }
+        
+        .user-list-item { background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        
+        md-dialog { z-index: 1000; position: fixed; }
+        md-dialog::part(container) { border-radius: 28px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2); background: var(--md-sys-color-surface); }
     </style>
 </head>
 <body>
 
     <aside class="sidebar" id="sidebar">
         <div style="padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--md-sys-color-outline);">
-            <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary)">menu_book</span>
+            <span class="material-symbols-outlined logo-icon" style="color:var(--md-sys-color-primary)">menu_book</span>
             <h2 style="margin: 0; font-size: 1.2rem;">Elysia Perpus</h2>
         </div>
         <div class="nav-menu" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
@@ -54,9 +98,8 @@
             <div class="nav-item" onclick="switchTab(1, this, 'Advance Search')"><span class="material-symbols-outlined">search</span><span>Advance Search</span></div>
             <div class="nav-item" onclick="switchTab(2, this, 'Pengembalian')"><span class="material-symbols-outlined">inventory</span><span>Pengembalian</span></div>
             <div class="nav-item" onclick="switchTab(3, this, 'Pengaturan Akun')"><span class="material-symbols-outlined">settings</span><span>Settings</span></div>
-            
-            <div id="nav-admin" class="nav-item" onclick="switchTab(4, this, 'Admin Dashboard')" style="display: none; border-top: 1px solid var(--md-sys-color-outline); margin-top: 8px; padding-top: 16px;">
-                <span class="material-symbols-outlined" style="color: #146c2e;">admin_panel_settings</span><span style="color: #146c2e; font-weight: bold;">Admin Dashboard</span>
+            <div id="nav-admin" class="nav-item" onclick="switchTab(4, this, 'Admin Dashboard')" style="display: none; border-top: 1px dashed var(--md-sys-color-outline); margin-top: 8px; padding-top: 16px;">
+                <span class="material-symbols-outlined">admin_panel_settings</span><span>Admin Dashboard</span>
             </div>
         </div>
         <div style="padding: 16px; border-top: 1px solid var(--md-sys-color-outline);">
@@ -67,11 +110,14 @@
     <main class="main-content">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-symbols-outlined" onclick="sidebar.classList.toggle('hidden')" style="cursor:pointer">menu</span>
+                <span class="material-symbols-outlined" onclick="sidebar.classList.toggle('hidden')" style="cursor:pointer;">menu</span>
                 <h1 id="page-title" style="margin:0; font-size: 1.2rem;">Beranda</h1>
             </div>
             <div id="user-display" style="color: var(--md-sys-color-primary); font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                <img id="nav-avatar" src="" style="width:32px; height:32px; border-radius:50%; display:none; object-fit: cover;">
+                <div id="nav-avatar-container">
+                    <img id="nav-avatar" class="nav-avatar" src="" style="display:none;">
+                    <div id="nav-avatar-placeholder" class="nav-avatar-placeholder"><span class="material-symbols-outlined">person</span></div>
+                </div>
                 <span id="nav-username"></span>
             </div>
         </div>
@@ -95,79 +141,201 @@
             </div>
 
             <div id="p3" class="panel">
-                <div style="background:var(--md-sys-color-surface); padding:32px; border-radius:24px; text-align:center">
-                    <img id="set-avatar" class="avatar" src="https://via.placeholder.com/120?text=No+Photo">
+                <div style="background:var(--md-sys-color-surface); padding:32px; border-radius:24px; text-align:center; box-shadow: 0 4px 24px rgba(0,0,0,0.04);">
+                    <div id="avatar-container">
+                        <img id="set-avatar" class="avatar" src="" style="display:none;">
+                        <div id="set-avatar-placeholder" class="avatar-placeholder"><span class="material-symbols-outlined" style="font-size:64px;">person</span></div>
+                    </div>
                     <h2 id="set-username-title" style="margin: 8px 0;">Loading...</h2>
                     <p id="set-memberid" style="color:#666; margin: 0;"></p>
                     <p>Status: <b id="set-role" style="color: var(--md-sys-color-primary); text-transform: uppercase;"></b></p>
-                    
                     <md-divider style="margin: 24px 0;"></md-divider>
-                    
-                    <h3>Ubah Foto Profil</h3>
-                    <div style="display: flex; gap: 16px; justify-content: center; align-items: center;">
-                        <input type="file" id="photoInput" accept="image/*" style="padding: 8px; border: 1px solid #ccc; border-radius: 8px;">
-                        <md-filled-button onclick="uploadPhoto()">Unggah Foto</md-filled-button>
+                    <h3 style="color: #49454f;">Ubah Foto Profil</h3>
+                    <div style="display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                        <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                        <md-filled-button onclick="document.getElementById('photoInput').click()"><md-icon slot="icon">image</md-icon> Pilih Foto</md-filled-button>
                     </div>
                 </div>
             </div>
 
             <div id="p4" class="panel">
-                <h2 style="color:#146c2e; margin-top:0;">Sistem Informasi Perpustakaan</h2>
-                <div class="grid-list" id="admin-stats">
-                    <div class="admin-stat"><h3 id="stat-books">0</h3><p>Total Buku</p></div>
-                    <div class="admin-stat"><h3 id="stat-users">0</h3><p>Total Member</p></div>
-                    <div class="admin-stat"><h3 id="stat-loans">0</h3><p>Sedang Dipinjam</p></div>
+                <div class="admin-tabs">
+                    <md-filter-chip id="tab-stat" selected onclick="switchAdminSec('stat')">Statistik</md-filter-chip>
+                    <md-filter-chip id="tab-buku" onclick="switchAdminSec('buku')">Kelola Buku</md-filter-chip>
+                    <md-filter-chip id="tab-user" onclick="switchAdminSec('user')">Kelola Pengguna</md-filter-chip>
+                </div>
+
+                <div id="sec-stat" class="admin-sec active">
+                    <h2 style="color:var(--md-sys-color-primary); margin-top:0;">Ringkasan Sistem</h2>
+                    <div class="grid-list" id="admin-stats">
+                        <div class="admin-stat"><h3 id="stat-books">0</h3><p style="color:#666; margin-bottom:0;">Total Buku</p></div>
+                        <div class="admin-stat"><h3 id="stat-users">0</h3><p style="color:#666; margin-bottom:0;">Total Member</p></div>
+                        <div class="admin-stat"><h3 id="stat-loans">0</h3><p style="color:#666; margin-bottom:0;">Buku Dipinjam</p></div>
+                    </div>
+                </div>
+
+                <div id="sec-buku" class="admin-sec">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h2 style="color:var(--md-sys-color-primary); margin:0;">Daftar Buku</h2>
+                        <md-filled-button onclick="document.getElementById('addBookDlg').show()"><md-icon slot="icon">add</md-icon> Tambah Buku</md-filled-button>
+                    </div>
+                    <div class="grid-list" id="admin-book-list"></div>
+                </div>
+
+                <div id="sec-user" class="admin-sec">
+                    <h2 style="color:var(--md-sys-color-primary); margin-top:0;">Daftar Pengguna</h2>
+                    <div id="admin-user-list"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <md-dialog id="prevDlg">
-        <div slot="headline" id="prevTitle"></div>
-        <div slot="content">
-            <p id="prevAuthor" style="color:#666; margin-bottom: 16px;"></p>
-            <p>Buku ini tersedia untuk dipinjam secara otomatis selama 7 hari.</p>
+    <md-dialog id="cropDlg">
+        <div slot="headline">Sesuaikan Foto</div>
+        <div slot="content" style="width:100%; max-width:400px; height:350px; background:#000; overflow:hidden; display:flex; justify-content:center; align-items:center;">
+            <img id="image-to-crop" src="" style="max-width:100%; display:block;">
         </div>
+        <div slot="actions">
+            <md-text-button onclick="cropDlg.close(); if(cropper) cropper.destroy();">Batal</md-text-button>
+            <md-filled-button onclick="processAndUploadCrop()">Simpan</md-filled-button>
+        </div>
+    </md-dialog>
+
+    <md-dialog id="prevDlg">
+        <div slot="headline" id="prevTitle" style="font-size: 1.5rem; font-weight: 700; color: var(--md-sys-color-primary); line-height: 1.3;"></div>
+        
+        <div slot="content" style="display: flex; flex-direction: column; gap: 16px; padding-top: 8px;">
+
+            <div style="width: 100%; background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline); border-radius: 16px; box-sizing: border-box; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 320px;">
+                <img id="prevCover" src="" style="width: 100%; height: 320px; object-fit: cover; object-position: center 25%; display: none;">
+                
+                <div id="prevCoverPlaceholder" style="display: none; flex-direction: column; align-items: center; color: var(--md-sys-color-outline);">
+                    <span class="material-symbols-outlined" style="font-size: 80px; margin-bottom: 8px;">menu_book</span>
+                    <span style="font-size: 14px; font-weight: 500;">Tidak Ada Sampul</span>
+                </div>
+            </div>
+            
+            <div>
+                <p id="prevAuthor" style="color: #49454f; margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 500;"></p>
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(103, 80, 164, 0.08); padding: 8px 16px; border-radius: 12px;">
+                    <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary); font-size: 20px;">inventory_2</span>
+                    <span id="prevStock" style="color:var(--md-sys-color-primary); font-weight: bold; margin: 0; font-size: 1rem;"></span>
+                </div>
+            </div>
+            
+            <p style="color: #666; margin: 0; font-size: 0.9rem; line-height: 1.5;">Buku ini otomatis dipinjamkan selama 7 hari.</p>
+        </div>
+        
         <div slot="actions">
             <md-text-button onclick="prevDlg.close()">Batal</md-text-button>
             <md-filled-button id="btnPinjam">Pinjam Sekarang</md-filled-button>
         </div>
     </md-dialog>
+
+    <md-dialog id="addBookDlg">
+        <div slot="headline">Tambah Buku Baru</div>
+        <form id="addBookForm" slot="content" style="display:flex; flex-direction:column; gap:16px; width:300px; padding-top:8px;">
+            <md-outlined-text-field id="newBookTitle" label="Judul Buku" required></md-outlined-text-field>
+            <md-outlined-text-field id="newBookAuthor" label="Penulis" required></md-outlined-text-field>
+            <md-outlined-text-field id="newBookStock" type="number" label="Jumlah Stok" value="1" required></md-outlined-text-field>
+            <div>
+                <label style="font-size:12px; color:#666; display:block; margin-bottom:8px;">Foto Sampul (Opsional)</label>
+                <input type="file" id="newBookCover" accept="image/*" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+            </div>
+        </form>
+        <div slot="actions">
+            <md-text-button onclick="addBookDlg.close()">Batal</md-text-button>
+            <md-filled-button onclick="submitNewBook()">Simpan</md-filled-button>
+        </div>
+    </md-dialog>
+
+    <md-dialog id="changePwdDlg">
+        <div slot="headline">Ubah Kata Sandi</div>
+        <div slot="content" style="width:300px; padding-top:8px;">
+            <p style="margin-top:0; font-size:14px; color:#666;">Member ID: <b id="pwdTargetId"></b></p>
+            <md-outlined-text-field id="newPwdInput" type="password" label="Sandi Baru" style="width:100%"></md-outlined-text-field>
+        </div>
+        <div slot="actions">
+            <md-text-button onclick="changePwdDlg.close()">Batal</md-text-button>
+            <md-filled-button onclick="submitNewPassword()">Simpan</md-filled-button>
+        </div>
+    </md-dialog>
+
+    <md-dialog id="userLoansDlg">
+        <div slot="headline">Daftar Pinjaman</div>
+        <div slot="content" style="width: 100%; min-width: 350px; max-height: 400px; overflow-y: auto;">
+            <p id="userLoanSummary" style="margin-top:0; color:var(--md-sys-color-primary); font-weight:bold;"></p>
+            <div id="userLoanDetails" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+        <div slot="actions"><md-text-button onclick="userLoansDlg.close()">Tutup</md-text-button></div>
+    </md-dialog>
+    
+    <md-dialog id="timeMachineDlg">
+        <div slot="headline" style="color: #b3261e; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined">history</span> Mesin Waktu
+        </div>
+        <div slot="content" style="width:300px; padding-top:8px;">
+            <p style="margin-top:0; font-size:14px; color:#49454f;">Atur durasi pinjaman untuk ID: <b id="tmLoanIdText"></b></p>
+            <md-outlined-text-field id="tmDaysInput" type="number" label="Jumlah Hari" value="1" style="width:100%;"></md-outlined-text-field>
+            <p style="font-size:12px; color:#666; margin-top:8px; line-height:1.4;">*Isi angka positif (misal: 10) untuk memajukan hari (simulasi telat).<br>*Isi angka negatif (misal: -2) untuk memundurkan hari.</p>
+        </div>
+        <div slot="actions">
+            <md-text-button onclick="timeMachineDlg.close()">Batal</md-text-button>
+            <md-filled-button onclick="submitTimeMachine()" style="--md-sys-color-primary: #b3261e;">Ubah Waktu</md-filled-button>
+        </div>
+    </md-dialog>
+
     <md-dialog id="msgDlg"><div slot="content" id="msgContent"></div><div slot="actions"><md-filled-button onclick="msgDlg.close()">OK</md-filled-button></div></md-dialog>
 
     <script>
         const memberId = localStorage.getItem('savedMemberId');
         let currentUser = null;
+        let cropper = null;
+        let selectedUserId = null; 
+        
+        let tmSelectedLoanId = null;
+        let tmSelectedUid = null;
+        let tmSelectedUname = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if(!memberId) { window.location.href = '/login.html'; return; }
-            
-            // Ambil data profil terbaru dari server
             try {
                 const res = await fetch(`/api/user/${memberId}`);
                 currentUser = await res.json();
-                
                 document.getElementById('nav-username').innerText = currentUser.username;
                 
+                const navAvatar = document.getElementById('nav-avatar');
+                const navPlaceholder = document.getElementById('nav-avatar-placeholder');
+                const setAvatar = document.getElementById('set-avatar');
+                const setPlaceholder = document.getElementById('set-avatar-placeholder');
+
                 if (currentUser.photo) {
-                    document.getElementById('nav-avatar').src = currentUser.photo;
-                    document.getElementById('nav-avatar').style.display = 'block';
-                    document.getElementById('set-avatar').src = currentUser.photo;
+                    navAvatar.src = currentUser.photo;
+                    navAvatar.style.display = 'block';
+                    navPlaceholder.style.display = 'none';
+                    setAvatar.src = currentUser.photo;
+                    setAvatar.style.display = 'inline-block';
+                    setPlaceholder.style.display = 'none';
+                } else {
+                    navAvatar.style.display = 'none';
+                    navPlaceholder.style.display = 'flex';
+                    setAvatar.style.display = 'none';
+                    setPlaceholder.style.display = 'flex';
                 }
 
-                if (currentUser.role === 'admin') {
-                    document.getElementById('nav-admin').style.display = 'flex';
-                }
-            } catch(e) { console.error("Gagal memuat profil"); }
-            
+                if (currentUser.role === 'admin') document.getElementById('nav-admin').style.display = 'flex';
+            } catch(e) { console.error(e); }
             loadLatest();
         });
 
         function switchTab(idx, el, title) {
-            document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', n === el));
-            document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+            document.querySelectorAll('.panel').forEach((p, i) => {
+                p.classList.remove('active');
+                if (i === idx) { void p.offsetWidth; p.classList.add('active'); }
+            });
             document.getElementById('page-title').innerText = title;
-            
             if(idx === 0) loadLatest();
             if(idx === 1) searchBooks('');
             if(idx === 2) loadMyLoans();
@@ -176,81 +344,277 @@
                 document.getElementById('set-memberid').innerText = "ID Member: " + currentUser.member_id;
                 document.getElementById('set-role').innerText = currentUser.role;
             }
-            if(idx === 4) loadAdminStats();
+            if(idx === 4) switchAdminSec('stat');
         }
 
-        async function loadAdminStats() {
-            const res = await fetch('/api/admin/stats');
-            const data = await res.json();
-            document.getElementById('stat-books').innerText = data.books.c;
-            document.getElementById('stat-users').innerText = data.users.c;
-            document.getElementById('stat-loans').innerText = data.loans.c;
+        function switchAdminSec(sec) {
+            ['stat', 'buku', 'user'].forEach(s => {
+                document.getElementById(`tab-${s}`).selected = (s === sec);
+                document.getElementById(`sec-${s}`).classList.toggle('active', s === sec);
+            });
+            if(sec === 'stat') loadAdminStats();
+            if(sec === 'buku') loadAdminBooks();
+            if(sec === 'user') loadAdminUsers();
         }
 
-        async function uploadPhoto() {
-            const fileInput = document.getElementById('photoInput');
-            if (fileInput.files.length === 0) return alert("Pilih foto dulu!");
+        function renderGrid(id, books) {
+            document.getElementById(id).innerHTML = books.map(b => {
+                const coverHTML = b.cover_image 
+                    ? `<img src="${b.cover_image}" class="book-cover" alt="Cover">`
+                    : `<div class="book-cover-placeholder"><span class="material-symbols-outlined" style="font-size:48px;">menu_book</span></div>`;
+                
+                const stockBadge = b.stock > 0 
+                    ? `<span class="stock-label stock-ok"><md-icon style="font-size:14px;">check_circle</md-icon> Stok: ${b.stock}</span>` 
+                    : `<span class="stock-label stock-empty"><md-icon style="font-size:14px;">cancel</md-icon> Habis</span>`;
 
-            const formData = new FormData();
-            formData.append('memberId', memberId);
-            formData.append('photo', fileInput.files[0]);
-
-            const res = await fetch('/api/upload-photo', { method: 'POST', body: formData });
-            const data = await res.json();
-            
-            if (data.status === 'sukses') {
-                document.getElementById('nav-avatar').src = data.photoUrl;
-                document.getElementById('nav-avatar').style.display = 'block';
-                document.getElementById('set-avatar').src = data.photoUrl;
-                msgContent.innerText = "Foto profil berhasil diperbarui!";
-                msgDlg.show();
-            }
+                return `
+                <div class="book-card" onclick="openPreview('${b.book_id}', '${b.title.replace(/'/g, "\\'")}', '${b.author.replace(/'/g, "\\'")}', '${b.cover_image || ''}', ${b.stock})">
+                    ${coverHTML}
+                    <div class="book-info">
+                        <div>
+                            <div style="font-weight:bold; font-size:1.1em; line-height:1.3; margin-bottom:4px;">${b.title}</div>
+                            <div style="font-size:12px; color:#666; margin-bottom: 8px;">${b.author}</div>
+                            ${stockBadge}
+                        </div>
+                        <div style="margin-top:12px; padding:4px 8px; background:rgba(103,80,164,0.1); color:var(--md-sys-color-primary); display:inline-block; border-radius:6px; font-size:12px; font-weight: 500; align-self: flex-start;">Dipinjam: ${b.borrow_count}x</div>
+                    </div>
+                </div>
+            `}).join('') || '<p style="color: #666; grid-column: 1 / -1;">Tidak ada data.</p>';
         }
 
-        // --- FUNGSI BUKU (SAMA SEPERTI SEBELUMNYA) ---
         async function loadLatest() { renderGrid('latest-list', await (await fetch('/api/books/latest')).json()); }
         async function searchBooks(q) { renderGrid('search-results', await (await fetch(`/api/books/search?q=${q}`)).json()); }
-        function renderGrid(id, books) {
-            document.getElementById(id).innerHTML = books.map(b => `
-                <div class="book-card" onclick="openPreview('${b.book_id}', '${b.title}', '${b.author}')">
-                    <div style="font-weight:bold">${b.title}</div><div style="font-size:12px; color:#666">ID: ${b.book_id}</div>
-                    <div style="margin-top:8px; padding:4px 8px; background:rgba(103,80,164,0.1); color:var(--md-sys-color-primary); display:inline-block; border-radius:6px; font-size:12px;">Dipinjam: ${b.borrow_count}x</div>
-                </div>
-            `).join('') || '<p>Tidak ada data.</p>';
-        }
 
-        function openPreview(id, title, author) {
+        function openPreview(id, title, author, coverUrl, stock) {
             document.getElementById('prevTitle').innerText = title;
             document.getElementById('prevAuthor').innerText = author;
-            document.getElementById('btnPinjam').onclick = () => doPinjam(id);
+            document.getElementById('prevStock').innerText = stock > 0 ? `Sisa Stok: ${stock} Buku` : "Stok Habis";
+            
+            const cvr = document.getElementById('prevCover');
+            const placeholder = document.getElementById('prevCoverPlaceholder');
+            if(coverUrl) { cvr.src = coverUrl; cvr.style.display = 'block'; placeholder.style.display = 'none'; } 
+            else { cvr.style.display = 'none'; placeholder.style.display = 'flex'; }
+            
+            const btn = document.getElementById('btnPinjam');
+            if(stock <= 0) { btn.disabled = true; btn.innerText = "Stok Habis"; } 
+            else { btn.disabled = false; btn.innerText = "Pinjam Sekarang"; btn.onclick = () => doPinjam(id); }
             document.getElementById('prevDlg').show();
         }
 
+        async function loadAdminBooks() {
+            const books = await (await fetch('/api/books/latest')).json(); 
+            document.getElementById('admin-book-list').innerHTML = books.map(b => {
+                const coverHTML = b.cover_image 
+                    ? `<img src="${b.cover_image}" class="book-cover" style="height:160px;" alt="Cover">`
+                    : `<div class="book-cover-placeholder" style="height:160px;"><span class="material-symbols-outlined" style="font-size:32px;">menu_book</span></div>`;
+                return `
+                <div class="book-card" onclick="openPreview('${b.book_id}', '${b.title.replace(/'/g, "\\'")}', '${b.author.replace(/'/g, "\\'")}', '${b.cover_image || ''}', ${b.stock})">
+                    ${coverHTML}
+                    <div class="book-info">
+                        <div style="font-weight:bold; font-size:1em; margin-bottom:4px;">${b.title}</div>
+                        <div style="font-size:11px; color:#666;">ID: ${b.book_id}</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        async function submitNewBook() {
+            const title = document.getElementById('newBookTitle').value, author = document.getElementById('newBookAuthor').value, stock = document.getElementById('newBookStock').value, fileInput = document.getElementById('newBookCover');
+            if(!title || !author || !stock) return alert("Lengkapi data!");
+
+            const formData = new FormData(); formData.append('title', title); formData.append('author', author); formData.append('stock', stock);
+            document.getElementById('addBookDlg').close();
+            
+            if(fileInput.files.length > 0) {
+                msgContent.innerText = "Menyimpan buku..."; msgDlg.show();
+                try {
+                    const compressedBlob = await autoCompressImage(fileInput.files[0], 600, 900, 0.7);
+                    formData.append('cover', compressedBlob, 'cover.jpg');
+                } catch (e) {}
+            } else { msgContent.innerText = "Menyimpan..."; msgDlg.show(); }
+
+            try {
+                await fetch('/api/admin/books', { method: 'POST', body: formData });
+                document.getElementById('addBookForm').reset();
+                loadAdminBooks(); msgContent.innerText = "Berhasil!";
+            } catch(e) {}
+        }
+
+        function autoCompressImage(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image(); img.src = event.target.result;
+                    img.onload = () => {
+                        let w = img.width, h = img.height;
+                        if (w > h) { if (w > maxWidth) { h *= maxWidth / w; w = maxWidth; } } 
+                        else { if (h > maxHeight) { w *= maxHeight / h; h = maxHeight; } }
+                        const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        canvas.toBlob(resolve, 'image/jpeg', quality);
+                    };
+                };
+            });
+        }
+
+        async function loadAdminUsers() {
+            const users = await (await fetch('/api/admin/users')).json();
+            document.getElementById('admin-user-list').innerHTML = users.map(u => {
+                const pfpHTML = u.photo 
+                    ? `<img src="${u.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">`
+                    : `<div style="width:40px; height:40px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; color:var(--md-sys-color-primary); border:1px solid var(--md-sys-color-outline);"><span class="material-symbols-outlined" style="font-size:20px;">person</span></div>`;
+                return `
+                <div class="user-list-item">
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        ${pfpHTML}
+                        <div>
+                            <div style="font-weight:bold;">${u.username} <span style="font-size:10px; padding:2px 6px; background:#e0e0e0; border-radius:4px;">${u.role}</span></div>
+                            <div style="font-size:12px; color:#666;">ID: ${u.member_id}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <md-text-button onclick="openUserLoans('${u.member_id}', '${u.username}')">Pinjaman</md-text-button>
+                        <md-text-button onclick="openChangePwd('${u.member_id}')">Sandi</md-text-button>
+                        <md-filled-button onclick="deleteUser('${u.member_id}')" style="--md-sys-color-primary: #b3261e;">Hapus</md-filled-button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        async function openUserLoans(uid, uname) {
+            const loans = await (await fetch(`/api/my-loans/${uid}`)).json();
+            const sumEl = document.getElementById('userLoanSummary');
+            const detEl = document.getElementById('userLoanDetails');
+            if(!loans || loans.length === 0 || loans.status === 'gagal') {
+                sumEl.innerText = `${uname} tidak meminjam buku.`; detEl.innerHTML = '';
+            } else {
+                sumEl.innerText = `${uname} meminjam ${loans.length} buku:`;
+                detEl.innerHTML = loans.map(l => {
+                    const isLate = l.days_passed > 7;
+                    return `
+                    <div style="padding:12px; background:#f3edf7; border-radius:8px; border-left:4px solid var(--md-sys-color-primary); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:bold;">${l.title}</div>
+                            <div style="font-size:12px; color:#666;">Waktu: <b style="${isLate ? 'color:#b3261e;' : ''}">${Math.floor(l.days_passed)} hari</b></div>
+                        </div>
+                        <md-text-button onclick="openTimeMachine(${l.loan_id}, '${uid}', '${uname}')" style="--md-sys-color-primary: #b3261e; font-size:12px;">Mesin Waktu</md-text-button>
+                    </div>
+                `}).join('');
+            }
+            document.getElementById('userLoansDlg').show();
+        }
+
+        function openTimeMachine(loanId, uid, uname) {
+            tmSelectedLoanId = loanId;
+            tmSelectedUid = uid;
+            tmSelectedUname = uname;
+            
+            document.getElementById('tmLoanIdText').innerText = loanId;
+            document.getElementById('tmDaysInput').value = '1';
+            
+            document.getElementById('timeMachineDlg').show();
+        }
+
+        async function submitTimeMachine() {
+            const daysInput = document.getElementById('tmDaysInput').value;
+            const days = parseInt(daysInput);
+            
+            if(isNaN(days)) return alert("Masukkan angka yang valid!");
+
+            try {
+                await fetch(`/api/admin/loans/${tmSelectedLoanId}/simulate-time`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ days: days })
+                });
+                
+                document.getElementById('timeMachineDlg').close();
+                
+                openUserLoans(tmSelectedUid, tmSelectedUname);
+                if (tmSelectedUid === memberId) loadMyLoans();
+                
+                msgContent.innerText = `Waktu peminjaman berhasil digeser ${days} hari!`; 
+                msgDlg.show();
+            } catch(e) {
+                alert("Gagal menggunakan mesin waktu.");
+            }
+        }
+
+        async function loadAdminStats() {
+            const data = await (await fetch('/api/admin/stats')).json();
+            document.getElementById('stat-books').innerText = data.books.c; document.getElementById('stat-users').innerText = data.users.c; document.getElementById('stat-loans').innerText = data.loans.c;
+        }
+
         async function doPinjam(bookId) {
-            const res = await fetch('/api/pinjam', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ memberId, bookId }) });
-            const data = await res.json();
-            document.getElementById('prevDlg').close();
-            document.getElementById('msgContent').innerText = data.message;
-            document.getElementById('msgDlg').show();
+            const data = await (await fetch('/api/pinjam', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ memberId, bookId }) })).json();
+            document.getElementById('prevDlg').close(); msgContent.innerText = data.message; msgDlg.show();
+            loadLatest();
         }
 
         async function loadMyLoans() {
-            const res = await fetch(`/api/my-loans/${memberId}`);
-            const loans = await res.json();
+            const loans = await (await fetch(`/api/my-loans/${memberId}`)).json();
             document.getElementById('loan-list').innerHTML = loans.map(l => `
-                <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #cac4d0; border-left: 6px solid #6750a4; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
-                    <div><div style="font-weight:bold">${l.title}</div><div style="font-size:12px; color:#666">Dipinjam: ${Math.floor(l.days_passed)} hari</div></div>
-                    <md-filled-button onclick="doKembali(${l.loan_id})">Kembalikan</md-filled-button>
+                <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #cac4d0; border-left: 6px solid #6750a4; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <div><div style="font-weight:bold; font-size: 1.1em;">${l.title}</div><div style="font-size:13px; color:#666;">Sudah: ${Math.floor(l.days_passed)} hari</div></div>
+                    <md-filled-button onclick="doKembali(${l.loan_id})">Kembali</md-filled-button>
                 </div>
-            `).join('') || '<p>Anda tidak meminjam buku.</p>';
+            `).join('') || '<p style="color:#666;">Kosong.</p>';
         }
 
         async function doKembali(loanId) {
-            const res = await fetch('/api/kembali', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ loanId }) });
-            const data = await res.json();
-            document.getElementById('msgContent').innerText = data.message;
-            document.getElementById('msgDlg').show();
-            loadMyLoans();
+            const data = await (await fetch('/api/kembali', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ loanId }) })).json();
+            msgContent.innerText = data.message; msgDlg.show();
+            loadMyLoans(); loadLatest();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('image-to-crop').src = e.target.result;
+                document.getElementById('cropDlg').show();
+                if (cropper) cropper.destroy();
+                setTimeout(() => { cropper = new Cropper(document.getElementById('image-to-crop'), { aspectRatio: 1, viewMode: 1, background: false }); }, 150);
+            }; reader.readAsDataURL(file);
+        }
+
+        async function processAndUploadCrop() {
+            if (!cropper) return;
+            cropper.getCroppedCanvas({ width: 400, height: 400 }).toBlob(async (blob) => {
+                document.getElementById('cropDlg').close(); cropper.destroy();
+                const formData = new FormData(); formData.append('memberId', memberId); formData.append('photo', blob, 'pfp.jpg'); 
+                msgContent.innerText = "Mengunggah..."; msgDlg.show();
+                
+                try {
+                    const data = await (await fetch('/api/upload-photo', { method: 'POST', body: formData })).json();
+                    if (data.status === 'sukses') { 
+                        const freshUrl = data.photoUrl;
+                        document.getElementById('nav-avatar').src = freshUrl;
+                        document.getElementById('nav-avatar').style.display = 'block';
+                        document.getElementById('nav-avatar-placeholder').style.display = 'none';
+                        document.getElementById('set-avatar').src = freshUrl;
+                        document.getElementById('set-avatar').style.display = 'inline-block';
+                        document.getElementById('set-avatar-placeholder').style.display = 'none';
+                        currentUser.photo = freshUrl; 
+                        if(currentUser.role === 'admin') loadAdminUsers(); 
+                        msgContent.innerText = "Foto diperbarui!"; 
+                    } 
+                    else { msgContent.innerText = data.message || "Gagal upload"; }
+                } catch(e) { msgContent.innerText = "Kesalahan server."; }
+                
+            }, 'image/jpeg', 0.7); 
+        }
+
+        function openChangePwd(uid) { selectedUserId = uid; document.getElementById('pwdTargetId').innerText = uid; document.getElementById('newPwdInput').value = ''; document.getElementById('changePwdDlg').show(); }
+        async function submitNewPassword() {
+            const pwd = document.getElementById('newPwdInput').value; if(!pwd) return;
+            await fetch(`/api/admin/users/${selectedUserId}/password`, { method: 'POST', headers:{'Content-Type': 'application/json'}, body: JSON.stringify({ newPassword: pwd }) });
+            document.getElementById('changePwdDlg').close(); msgContent.innerText = "Berhasil!"; msgDlg.show();
+        }
+
+        async function deleteUser(uid) {
+            if(!confirm("Hapus user?")) return;
+            await fetch(`/api/admin/users/${uid}`, { method: 'DELETE' }); loadAdminUsers();
         }
 
         function logout() { localStorage.clear(); window.location.href = '/login.html'; }
