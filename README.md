@@ -7,42 +7,100 @@ A modern library management system built with the Elysia.js framework and Bun ru
 ## Installation
 
 To install dependencies:
+
 ```bash
 bun install
+
 ```
-
 ## Execution
-
 To run the server:
-
 ```bash
 bun run index.ts
+
 ```
-
 ## Features
-
-*   **Material You Interface**: Implements responsive Google Material 3 design standards.
-*   **Profile Management**: Users can upload and crop profile pictures directly within the application.
-*   **Admin Dashboard**: Tools for monitoring system statistics, managing user lists, and adding book collections.
-*   **Book Tracking**: Every book added is automatically assigned a structured unique identifier (e.g., EP-10001).
-*   **Core Security**: Equipped with Security Headers (HSTS, CSP) and JWT-based authentication.
-*   **Synchronization**: Utilizes SQLite with WAL (Write-Ahead Logging) mode for real-time data consistency.
-
+ * **Material You Interface**: Implements responsive Google Material 3 design standards.
+ * **Profile Management**: Users can upload and crop profile pictures directly within the application.
+ * **Admin Dashboard**: Tools for monitoring system statistics, managing user lists, and adding book collections.
+ * **Book Tracking**: Every book added is automatically assigned a structured unique identifier (e.g., EP-10001).
+ * **Security**: Equipped with Security Headers (HSTS, CSP) and JWT-based authentication.
+ * **Synchronization**: Utilizes SQLite with WAL (Write-Ahead Logging) mode for real-time data consistency.
 ## Tech Stack
-
-*   **Runtime**: Bun v1.3.13
-*   **Framework**: Elysia.js
-*   **Database**: SQLite (via bun:sqlite)
-*   **UI Library**: Material Web Components and Material Symbols
-*   **Imaging**: Cropper.js
-
+ * **Runtime**: Bun v1.3.13
+ * **Framework**: Elysia.js
+ * **Database**: SQLite (via bun:sqlite)
+ * **UI Library**: Material Web Components and Material Symbols
+ * **Imaging**: Cropper.js
 ## Directory Structure
+ * index.ts: Main backend logic and database configuration.
+ * public/: Frontend assets including index.html, login.html, and register.html.
+ * database/: Directory for SQLite database files.
+ * public/uploads/: Storage for user profile pictures.
+ * public/covers/: Storage for book cover images.
+## Database Architecture & ERD
+The database is built using SQLite with Write-Ahead Logging (WAL) mode enabled for concurrent read/write operations. The system consists of three main tables: users, books, and loans.
+### Entity Relationship Diagram
+```mermaid
+erDiagram
+    USERS ||--o{ LOANS : "borrows (1:N)"
+    BOOKS ||--o{ LOANS : "is borrowed in (1:N)"
 
-*   `index.ts`: Main backend logic and database configuration.
-*   `public/`: Frontend assets including index.html, login.html, and register.html.
-*   `database/`: Directory for SQLite database files.
-*   `public/uploads/`: Storage for user profile pictures.
-*   `public/covers/`: Storage for book cover images.
+    USERS {
+        TEXT member_id PK
+        TEXT username UK
+        TEXT password
+        TEXT role
+        TEXT photo
+    }
 
----
+    BOOKS {
+        TEXT book_id PK
+        TEXT title
+        TEXT author
+        TEXT cover_image
+        INTEGER borrow_count
+        INTEGER stock
+        DATETIME updated_at
+    }
+
+    LOANS {
+        INTEGER loan_id PK
+        TEXT member_id FK
+        TEXT book_id FK
+        DATETIME loan_date
+        TEXT status
+    }
+
+```
+### Data Dictionary
+#### Table: users
+Stores all account information for both administrators and regular library members.
+| Column Name | Data Type | Constraints | Default Value | Description |
+|---|---|---|---|---|
+| member_id | TEXT | Primary Key | - | Unique generated identifier (e.g., M-1234). |
+| username | TEXT | Unique, Not Null | - | User's login identification. |
+| password | TEXT | Not Null | - | Bcrypt hashed password. |
+| role | TEXT | - | 'member' | Defines access level ('admin' or 'member'). |
+| photo | TEXT | - | '' (Empty String) | Relative URL path to the user's uploaded profile picture. |
+#### Table: books
+Contains the library's book catalog and current availability statistics.
+| Column Name | Data Type | Constraints | Default Value | Description |
+|---|---|---|---|---|
+| book_id | TEXT | Primary Key | - | Unique generated serial number (e.g., EP-10001). |
+| title | TEXT | Not Null | - | Title of the book. |
+| author | TEXT | Not Null | - | Author of the book. |
+| cover_image | TEXT | - | '' (Empty String) | Relative URL path to the book's cover image. |
+| borrow_count | INTEGER | - | 0 | Total number of times the book has been borrowed. |
+| stock | INTEGER | - | 1 | Current available physical stock for borrowing. |
+| updated_at | DATETIME | - | CURRENT_TIMESTAMP | Timestamp of the last metadata update or stock change. |
+#### Table: loans
+A transactional junction table that records the borrowing activities between users and books.
+| Column Name | Data Type | Constraints | Default Value | Description |
+|---|---|---|---|---|
+| loan_id | INTEGER | Primary Key | AUTOINCREMENT | Unique sequential identifier for the transaction. |
+| member_id | TEXT | Foreign Key | - | References users.member_id. |
+| book_id | TEXT | Foreign Key | - | References books.book_id. |
+| loan_date | DATETIME | - | CURRENT_TIMESTAMP | The exact date and time the loan was created. |
+| status | TEXT | - | 'PINJAM' | Current state of the loan ('PINJAM' or 'KEMBALI'). |
+
 This project was created using `bun init` in Bun v1.3.13. Bun is a fast all-in-one JavaScript runtime.
