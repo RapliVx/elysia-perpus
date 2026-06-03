@@ -78,7 +78,7 @@ Below is the logical flow of the application from user authentication to action 
 
 ## Database Architecture & ERD
 
-The database is built using SQLite with Write-Ahead Logging (WAL) mode enabled for concurrent read/write operations. The system consists of three main tables: users, books, and loans.
+The database is built using SQLite with Write-Ahead Logging (WAL) mode enabled for concurrent read/write operations. The system consists of three main tables: `users`, `books`, and `loans`.
 
 ### Entity Relationship Diagram
 
@@ -118,44 +118,44 @@ erDiagram
 
 ### Data Dictionary
 
-#### Table: users
+#### Table: `users`
 
 Stores all account information for both administrators and regular library members.
 
 | Column Name | Data Type | Constraints | Default Value | Description |
 | --- | --- | --- | --- | --- |
-| member_id | TEXT | Primary Key | - | Unique generated identifier (e.g., M-1234). |
-| username | TEXT | Unique, Not Null | - | User's login identification. |
-| password | TEXT | Not Null | - | Bcrypt hashed password. |
-| role | TEXT | - | 'member' | Defines access level ('admin' or 'member'). |
-| photo | TEXT | - | '' (Empty String) | Relative URL path to the user's uploaded profile picture. |
+| `member_id` | TEXT | Primary Key | - | Unique generated identifier (e.g., M-1234). |
+| `username` | TEXT | Unique, Not Null | - | User's login identification. |
+| `password` | TEXT | Not Null | - | Bcrypt hashed password. |
+| `role` | TEXT | - | member | Defines access level ('admin' or 'member'). |
+| `photo` | TEXT | - | (Empty String) | Relative URL path to the user's uploaded profile picture. |
 
-#### Table: books
+#### Table: `books`
 
-Contains the library's book catalog and current availability statistics.
+Contains the library's book catalog, genre classifications, and current availability statistics.
 
 | Column Name | Data Type | Constraints | Default Value | Description |
 | --- | --- | --- | --- | --- |
-| book_id | TEXT | Primary Key | - | Unique generated serial number (e.g., EP-10001). |
-| title | TEXT | Not Null | - | Title of the book. |
-| author | TEXT | Not Null | - | Author of the book. |
-| tags | TEXT | - | '' (Empty String) | Comma-separated list of genres/tags (e.g., Romance, Education). |
-| cover_image | TEXT | - | '' (Empty String) | Relative URL path to the book's cover image. |
-| borrow_count | INTEGER | - | 0 | Total number of times the book has been borrowed. |
-| stock | INTEGER | - | 1 | Current available physical stock for borrowing. |
-| updated_at | DATETIME | - | CURRENT_TIMESTAMP | Timestamp of the last metadata update or stock change. |
+| `book_id` | TEXT | Primary Key | - | Unique generated serial number (e.g., EP-10001). |
+| `title` | TEXT | Not Null | - | Title of the book. |
+| `author` | TEXT | Not Null | - | Author of the book. |
+| `tags` | TEXT | - | (Empty String) | Comma-separated list of genres/tags (e.g., Romance, Education). |
+| `cover_image` | TEXT | - | (Empty String) | Relative URL path to the book's cover image. |
+| `borrow_count` | INTEGER | - | 0 | Total number of times the book has been borrowed. |
+| `stock` | INTEGER | - | 1 | Current available physical stock for borrowing. |
+| `updated_at` | DATETIME | - | CURRENT_TIMESTAMP | Timestamp of the last metadata update or stock change. |
 
-#### Table: loans
+#### Table: `loans`
 
 A transactional junction table that records the borrowing activities between users and books.
 
 | Column Name | Data Type | Constraints | Default Value | Description |
 | --- | --- | --- | --- | --- |
-| loan_id | INTEGER | Primary Key | AUTOINCREMENT | Unique sequential identifier for the transaction. |
-| member_id | TEXT | Foreign Key | - | References users.member_id. |
-| book_id | TEXT | Foreign Key | - | References books.book_id. |
-| loan_date | DATETIME | - | CURRENT_TIMESTAMP | The exact date and time the loan was created. |
-| status | TEXT | - | 'PINJAM' | Current state of the loan ('PINJAM' or 'KEMBALI'). |
+| `loan_id` | INTEGER | Primary Key | AUTOINCREMENT | Unique sequential identifier for the transaction. |
+| `member_id` | TEXT | Foreign Key | - | References `users.member_id`. |
+| `book_id` | TEXT | Foreign Key | - | References `books.book_id`. |
+| `loan_date` | DATETIME | - | CURRENT_TIMESTAMP | The exact date and time the loan was created. |
+| `status` | TEXT | - | PINJAM | Current state of the loan ('PINJAM' or 'KEMBALI'). |
 
 ---
 
