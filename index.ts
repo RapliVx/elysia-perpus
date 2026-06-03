@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, unlinkSync } from 'fs';
 import AdmZip from 'adm-zip';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const JWT_SECRET = process.env.JWT_SECRET as string || 'fallback_secret_sementara_123';
+const JWT_SECRET = process.env.JWT_SECRET as string || 'fallback_prbw_tel_apip';
 const ADMIN_USER = process.env.ADMIN_USERNAME as string || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASSWORD as string || 'admin123';
 

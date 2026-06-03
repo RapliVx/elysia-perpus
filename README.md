@@ -13,6 +13,24 @@ bun install
 
 ```
 
+## Configuration
+
+Create a `.env` file in the root directory of the project. You can use the following template:
+
+```env
+# JWT Secret Key
+# Use a long, random string for security in production.
+JWT_SECRET=your_super_secret_jwt_key_here
+
+# Default Admin Setup
+# Used to generate the first admin account when the database is empty.
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+
+# Artificial Intelligence Credentials
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
 ## Execution
 
 To run the server:
