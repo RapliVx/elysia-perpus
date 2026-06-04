@@ -76,9 +76,17 @@ Below is the logical flow of the application from user authentication to action 
   <img src="flow.svg" alt="Application Flowchart" width="100%">
 </p>
 
-## Database Architecture & ERD
+## System Architecture
 
-The database is built using SQLite with Write-Ahead Logging (WAL) mode enabled for concurrent read/write operations. The system consists of three main tables: `users`, `books`, and `loans`.
+This system utilizes a modular architecture, handling user authentication, catalog management, and AI processing seamlessly.
+
+### Data Flow Diagram
+
+Below is the Data Flow Diagram illustrating how information moves between users (Admin/Member), core system processes, the external Google Gemini API, and the internal SQLite data stores.
+
+<p align="center">
+  <img src="dataflow.svg" alt="Data Flowchart" width="100%">
+</p>
 
 ### Entity Relationship Diagram
 
