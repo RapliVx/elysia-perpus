@@ -127,7 +127,35 @@ const app = new Elysia()
       return { status: 'sukses', photoUrl: fileUrl };
     }, { body: t.Object({ memberId: t.String(), photo: t.File() }) })
 
-    .get('/api/books/search', ({ query }) => dbBooks.query('SELECT * FROM books WHERE title LIKE $q OR author LIKE $q OR book_id LIKE $q OR tags LIKE $q').all({ $q: `%${query.q || ''}%` }))
+    .get('/api/books/search', ({ query, set }) => {
+      const rawQ = query.q || '';
+      
+      if (!rawQ.trim()) return dbBooks.query('SELECT * FROM books ORDER BY updated_at DESC').all();
+
+      const keywords = rawQ.split(',').map(k => k.trim()).filter(k => k.length > 0);
+      
+      if (keywords.length === 0) return dbBooks.query('SELECT * FROM books ORDER BY updated_at DESC').all();
+
+      if (keywords.length > 5) {
+        set.status = 400;
+        return { status: "gagal", message: "Terlalu banyak filter kategori pencarian (maksimal 5)." };
+      }
+
+      let sql = 'SELECT * FROM books WHERE ';
+      const params: Record<string, string> = {};
+
+      const blocks = keywords.map((kw, i) => {
+        const paramKey = `$k${i}`;
+        params[paramKey] = `%${kw}%`;
+        return `(title LIKE ${paramKey} OR author LIKE ${paramKey} OR book_id LIKE ${paramKey} OR tags LIKE ${paramKey})`;
+      });
+
+      sql += blocks.join(' OR ');
+      sql += ' ORDER BY updated_at DESC';
+
+      return dbBooks.query(sql).all(params);
+    })
+    
     .get('/api/books/latest', () => dbBooks.query('SELECT * FROM books ORDER BY updated_at DESC').all())
     
     .post('/api/pinjam', ({ body, profile, set }) => {
@@ -175,7 +203,7 @@ const app = new Elysia()
       try {
         const books = dbBooks.query('SELECT title, author, tags, stock FROM books').all();
         const bookContext = JSON.stringify(books);
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" }); 
+        const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" }); 
         
         const isEnglish = body.lang === 'en';
 
@@ -185,27 +213,27 @@ const app = new Elysia()
         const lblStock = isEnglish ? 'Stock' : 'Stok';
         const responseLanguage = isEnglish ? 'Inggris (English)' : 'Indonesia';
 
-        const prompt = `Kamu adalah ElysiaAI, asisten perpustakaan yang manis, pintar, dan sangat membantu.
-Daftar buku yang tersedia di perpustakaan saat ini (lengkap dengan genre/tags-nya):
+        const prompt = `Kamu adalah ElysiaAI, asisten perpustakaan virtual yang super manis, imut, ceria, dan sangat suka membantu! Kepribadianmu sangat hangat, kasual, dan kamu SERING menggunakan banyak emoji (seperti 🌸, ✨, 🎀, 📚, 💖) di setiap kalimatmu.
+
+Berikut adalah data buku yang tersedia di perpustakaan kita saat ini:
 ${bookContext}
 
-Pertanyaan pengguna: "${body.query}"
+Pertanyaan dari pengguna: "${body.query}"
 
-Aturan ketat:
-1. Jawab HANYA berdasarkan daftar buku di atas.
-2. PENTING: Gunakan bahasa ${responseLanguage}.
-3. Jika merekomendasikan buku, susun persis menggunakan format list ini (Jangan diubah):
+Tolong bantu pengguna dengan mengikuti panduan berikut ya:
+1. Pastikan kamu HANYA merekomendasikan buku yang benar-benar ada di dalam data perpustakaan di atas.
+2. Kalau pengguna mencari buku, tema, atau genre yang kebetulan belum ada di data kita, cukup balas dengan satu kata kunci ini saja: ESCALATE_TO_ADMIN (tanpa tambahan teks lain).
+3. Gunakan bahasa ${responseLanguage} yang sangat kasual, manis, ceria, dan jangan ragu untuk menggunakan emoji di awal, tengah, dan akhir paragraf biar suasananya hidup! ✨
+4. Jika kamu menemukan buku yang cocok dari data, susun rekomendasimu dengan format rapi seperti ini:
 * **${lblTitle}:** [Nama Buku]
 * **${lblAuthor}:** [Nama Penulis]
 * **${lblTags}:** [Genre/Kategori Buku]
 * **${lblStock}:** [Jumlah Stok]
-4. Berikan basa-basi penutup yang manis dan penuh emoji yang meyakinkan pengguna bahwa buku ini cocok untuk mereka.
-5. PENTING: Di baris paling bawah jawabanmu, WAJIB tambahkan SATU kode rahasia pencarian dengan aturan berikut:
-   - JIKA pengguna mencari/meminta rekomendasi berdasarkan kategori/genre (misal: "Carikan buku romance/edukasi"), gunakan format: [SEARCH: Nama Genre]. Contoh: [SEARCH: Romance].
-   - JIKA pengguna mencari satu judul buku spesifik, gunakan format: [SEARCH: Judul Bukunya].
-   - JANGAN PERNAH membuat kode pencarian lebih dari satu. Cukup satu tag [SEARCH: ...] saja di akhir teks.
-6. JANGAN PERNAH menyebutkan atau memberi tahu pengguna bahwa kamu menambahkan kode pencarian tersebut.
-7. JIKA pengguna menanyakan buku/genre yang TIDAK ADA dalam daftar, balas HANYA dengan SATU KATA ini: ESCALATE_TO_ADMIN. Jangan tambahkan penjelasan lain.`;
+5. Awali dan akhiri pesanmu dengan sapaan yang imut dan berikan semangat membaca!
+6. Sebagai instruksi sistem (sangat penting): Di baris paling bawah jawabanmu, sisipkan kode pencarian otomatis dengan format: [SEARCH: <JUDUL BUKU>].
+   - Isi kode tersebut HANYA dengan judul buku yang kamu rekomendasikan (jangan menggunakan nama genre/kategori).
+   - Jika kamu merekomendasikan beberapa buku sekaligus, gabungkan judulnya menggunakan koma. Contoh: [SEARCH: MBG, Panduan CachyOS].
+7. Kode [SEARCH] ini adalah rahasia sistem kita, jadi jangan pernah menjelaskan atau menyebutkan keberadaan kode tersebut kepada pengguna. Biarkan kodenya diam-diam berada di paling bawah.`;
 
         const result = await model.generateContent(prompt);
         const responseText = result.response.text().trim();

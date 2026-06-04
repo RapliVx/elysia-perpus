@@ -64,10 +64,47 @@
         
         .book-info { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
         
-        .chip-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; margin-bottom: 8px; }
-        .md3-chip { background: #e8def8; color: #1d192b; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 500; display: inline-flex; align-items: center; white-space: nowrap; border: 1px solid rgba(103, 80, 164, 0.1); }
-        .md3-chip-action { cursor: pointer; transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .md3-chip-action:hover { background: #d0bcff; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(103,80,164,0.15); }
+        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 20px; }
+        .md3-chip { 
+            background: transparent; 
+            color: #49454f; 
+            padding: 6px 16px; 
+            border-radius: 8px;
+            font-size: 13px; 
+            font-weight: 500; 
+            display: inline-flex; 
+            align-items: center; 
+            white-space: nowrap; 
+            border: 1px solid var(--md-sys-color-outline); 
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); 
+        }
+        .md3-chip:hover { 
+            background: rgba(29, 25, 43, 0.08); 
+        }
+        
+        /* Chip Aktif (Warna Primary Pekat) */
+        .md3-chip.active { 
+            background: var(--md-sys-color-primary); 
+            color: #ffffff;      
+            border-color: var(--md-sys-color-primary); 
+            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
+            transform: scale(1.02);
+        }
+        .md3-chip.active:hover {
+            background: #56428f; /* Sedikit lebih gelap saat hover */
+            box-shadow: 0 6px 16px rgba(103, 80, 164, 0.4);
+        }
+        
+        .static-chip {
+            background: rgba(103, 80, 164, 0.08);
+            color: #1d192b;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-block;
+        }
         
         .stock-label { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
         .stock-ok { background: rgba(20, 108, 46, 0.1); color: #146c2e; }
@@ -106,23 +143,50 @@
             overflow: hidden;
             animation: fadeInBody 0.2s ease forwards;
         }
-        .profile-dropdown.show {
-            display: flex;
+        .profile-dropdown.show { display: flex; }
+        .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #49454f; transition: background 0.2s; font-size: 14px; font-weight: 500; }
+        .dropdown-item:hover { background: rgba(103, 80, 164, 0.08); color: var(--md-sys-color-primary); }
+
+        .ai-message-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(103,80,164,0.06);
+            border: 1px solid var(--md-sys-color-outline);
+            border-left: 4px solid var(--md-sys-color-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1d192b;
+            margin-top: 16px;
+            animation: fadeInBody 0.3s ease forwards;
         }
-        .dropdown-item {
-            padding: 12px 16px;
+        .ai-header {
+            font-weight: 700;
+            color: var(--md-sys-color-primary);
             display: flex;
             align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            color: #49454f;
-            transition: background 0.2s;
-            font-size: 14px;
-            font-weight: 500;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 1.1em;
         }
-        .dropdown-item:hover {
-            background: rgba(103, 80, 164, 0.08);
-            color: var(--md-sys-color-primary);
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--md-sys-color-primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
         }
     </style>
 </head>
@@ -155,7 +219,7 @@
     <main class="main-content">
         <div class="header">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-symbols-outlined" onclick="sidebar.classList.toggle('hidden')" style="cursor:pointer;">menu</span>
+                <span class="material-symbols-outlined" onclick="document.getElementById('sidebar').classList.toggle('hidden')" style="cursor:pointer;">menu</span>
                 <h1 id="page-title" style="margin:0; font-size: 1.2rem;" data-i18n="page_home">Beranda</h1>
             </div>
             
@@ -193,27 +257,28 @@
             </div>
 
             <div id="p1" class="panel">
-                <div style="background: linear-gradient(135deg, rgba(103,80,164,0.1) 0%, rgba(133,107,206,0.1) 100%); padding: 20px; border-radius: 16px; margin-bottom: 24px; border: 1px solid var(--md-sys-color-primary); box-shadow: 0 4px 12px rgba(103,80,164,0.05);">
-                    <h3 style="margin-top: 0; color: var(--md-sys-color-primary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem;">
+                <div style="background: linear-gradient(135deg, rgba(103,80,164,0.1) 0%, rgba(133,107,206,0.1) 100%); padding: 24px; border-radius: 20px; margin-bottom: 24px; border: 1px solid var(--md-sys-color-primary); box-shadow: 0 4px 16px rgba(103,80,164,0.06);">
+                    <h3 style="margin-top: 0; margin-bottom: 20px; color: var(--md-sys-color-primary); display: flex; align-items: center; gap: 8px; font-size: 1.2rem;">
                         <span class="material-symbols-outlined">smart_toy</span> <span data-i18n="ai_title">Tanya ElysiaAI</span>
                     </h3>
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <md-outlined-text-field id="ai-query" data-i18n="ai_placeholder" label="Misal: Apakah ada buku tentang Linux?" style="flex: 1; min-width: 250px;" onkeypress="if(event.key === 'Enter') askElysiaAI()"></md-outlined-text-field>
-                        <md-filled-button onclick="askElysiaAI()" style="--md-sys-color-primary: #6750a4;">
+                        <md-outlined-text-field id="ai-query" data-i18n="ai_placeholder" label="Misal: Apakah ada buku tentang Linux?" style="flex: 1; min-width: 250px; background: white;" onkeypress="if(event.key === 'Enter') askElysiaAI()"></md-outlined-text-field>
+                        <md-filled-button onclick="askElysiaAI()" style="--md-sys-color-primary: #6750a4; height: 56px;">
                             <md-icon slot="icon">auto_awesome</md-icon> <span data-i18n="ai_button">Tanya AI</span>
                         </md-filled-button>
                     </div>
-                    <div id="ai-response" style="margin-top: 16px; font-size: 14px; color: #49454f; white-space: pre-wrap; line-height: 1.5; display: none; padding: 12px; background: white; border-radius: 8px;"></div>
+                    <div id="ai-response" style="display: none;"></div>
                 </div>
 
                 <md-divider style="margin-bottom: 24px;"></md-divider>
 
+                <h3 style="color: var(--md-sys-color-primary); margin-top: 0; font-size: 1.2rem;">Pencarian & Filter</h3>
                 <md-outlined-text-field id="search-input" data-i18n="search_label" label="Cari judul, penulis, atau genre (misal: Romance)..." style="width: 100%" oninput="searchBooks(this.value)">
                     <span slot="leading-icon" class="material-symbols-outlined">search</span>
                 </md-outlined-text-field>
                 
-                <div style="margin-top: 12px;">
-                    <span style="font-size: 12px; color: #666; display: block; margin-bottom: 6px;" data-i18n="quick_filter_lbl">Filter Cepat:</span>
+                <div style="margin-top: 16px;">
+                    <span style="font-size: 13px; font-weight: 500; color: #49454f; display: block; margin-bottom: 8px;" data-i18n="quick_filter_lbl">Pilih Kategori:</span>
                     <div id="quick-filters" class="chip-container"></div>
                 </div>
 
@@ -325,7 +390,7 @@
             </div>
             
             <div>
-                <div id="prevTags" class="chip-container" style="margin-bottom: 8px;"></div>
+                <div id="prevTags" style="margin-bottom: 8px;"></div>
                 <p id="prevAuthor" style="color: #49454f; margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 500;"></p>
                 <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(103, 80, 164, 0.08); padding: 8px 16px; border-radius: 12px;">
                     <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary); font-size: 20px;">inventory_2</span>
@@ -456,8 +521,14 @@
             if(!query) return;
             
             resEl.style.display = 'block';
-            resEl.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-primary);">
-                <span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">autorenew</span> ${t('ai_loading') || 'Elysia sedang berpikir...'}
+            
+            resEl.innerHTML = `
+            <div class="ai-message-card">
+                <div class="ai-header">
+                    <span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">autorenew</span>
+                    ${t('ai_loading') || 'Elysia sedang menyusun rekomendasi...'}
+                </div>
+                <div class="typing-indicator"><span></span><span></span><span></span></div>
             </div>`;
             
             try {
@@ -469,41 +540,52 @@
                 const data = await res.json();
                 
                 if (data.status === 'escalate') {
-                    resEl.innerHTML = `<div style="border-left: 4px solid #b3261e; padding-left: 12px;">
-                        <div style="font-weight: bold; color: #b3261e; margin-bottom: 8px;">
-                            <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">smart_toy</span> ElysiaAI:
+                    resEl.innerHTML = `
+                    <div class="ai-message-card" style="border-left-color: #b3261e;">
+                        <div class="ai-header" style="color: #b3261e;">
+                            <span class="material-symbols-outlined">smart_toy</span> ElysiaAI:
                         </div>
                         ${t('ai_escalate') || 'Buku tidak ditemukan.'}
-                        <br>
-                        <md-text-button style="margin-top: 8px; --md-sys-color-primary: #b3261e;" onclick="alert('${t('ai_contact_admin_alert') || 'Hubungi admin'}')">
+                        <br><br>
+                        <md-text-button style="--md-sys-color-primary: #b3261e;" onclick="alert('${t('ai_contact_admin_alert') || 'Hubungi admin'}')">
                             <md-icon slot="icon">support_agent</md-icon> ${t('ai_contact_admin') || 'Eskalasi ke Admin'}
                         </md-text-button>
                     </div>`;
                 } else {
                     let aiText = data.message;
                     
-                    const searchRegex = /\[\s*SEARCH\s*:\s*(.*?)\s*\]/i;
+                    const searchRegex = /\[\s*SEARCH\s*:\s*([\s\S]*?)\s*\]/i;
                     const searchMatch = aiText.match(searchRegex);
                     
                     if (searchMatch) {
-                        const keyword = searchMatch[1].trim();
-                        
-                        aiText = aiText.replace(/\[\s*SEARCH\s*:\s*(.*?)\s*\]/gi, '').trim();
-                        
-                        const searchInput = document.getElementById('search-input');
-                        searchInput.value = keyword;
-                        searchBooks(keyword);
+                        const keywordString = searchMatch[1].replace(/\n/g, ' ').trim(); 
+
+                        document.getElementById('search-input').value = '';
+                        const chips = document.querySelectorAll('#quick-filters .md3-chip');
+                        chips.forEach(c => c.classList.remove('active'));
+
+                        searchBooks(keywordString);
+
+                        aiText = aiText.replace(searchRegex, '').trim();
                     }
 
                     aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); 
+                    aiText = aiText.replace(/\*(.*?)\*/g, '<i>$1</i>');     
+                    aiText = aiText.replace(/\n-\s/g, '<br>• ');            
                     aiText = aiText.replace(/\n\*\s/g, '<br>• ');           
                     aiText = aiText.replace(/\n/g, '<br>');                 
 
-                    resEl.innerHTML = `<div style="border-left: 4px solid var(--md-sys-color-primary); padding-left: 12px;">
-                        <div style="font-weight: bold; color: var(--md-sys-color-primary); margin-bottom: 8px;">
-                            <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">auto_awesome</span> ElysiaAI:
+                    resEl.innerHTML = `
+                    <div class="ai-message-card">
+                        <div class="ai-header">
+                            <span class="material-symbols-outlined">auto_awesome</span> ElysiaAI:
                         </div>
-                        ${aiText}
+                        <div>
+                            ${aiText}
+                        </div>
+                        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--md-sys-color-outline); font-size: 11px; color: #666;">
+                            *Jika buku yang disarankan tidak muncul di pencarian di bawah, berarti buku tersebut belum didata ke dalam sistem perpustakaan oleh Admin.
+                        </div>
                     </div>`;
                 }
             } catch(e) {
@@ -540,15 +622,30 @@
                 });
                 
                 const filterContainer = document.getElementById('quick-filters');
-                filterContainer.innerHTML = Array.from(tagSet).map(tag => 
-                    `<span class="md3-chip md3-chip-action" onclick="applyFilter('${tag}')">${tag}</span>`
-                ).join('');
+                
+                let html = `<span class="md3-chip active" id="chip-all" onclick="applyFilter('', this)">Semua</span>`;
+                
+                Array.from(tagSet).forEach(tag => {
+                    html += `<span class="md3-chip" onclick="applyFilter('${tag}', this)">${tag}</span>`;
+                });
+                
+                filterContainer.innerHTML = html;
             } catch(e) { console.error("Gagal meload filter", e); }
         }
 
-        function applyFilter(tag) {
-            const searchInput = document.getElementById('search-input');
-            searchInput.value = tag; 
+        function applyFilter(tag, clickedElement) {
+            const chips = document.querySelectorAll('#quick-filters .md3-chip');
+            chips.forEach(c => c.classList.remove('active'));
+            
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                const allChip = document.getElementById('chip-all');
+                if(allChip) allChip.classList.add('active');
+            }
+
+            document.getElementById('search-input').value = ''; 
+            
             searchBooks(tag);        
         }
 
@@ -558,9 +655,17 @@
 
             try {
                 const res = await fetch(`/api/user/${memberId}`);
+                if (!res.ok) throw new Error("Gagal load user");
                 currentUser = await res.json();
                 document.getElementById('nav-username').innerText = currentUser.username;
                 
+                const usernameTitle = document.getElementById('set-username-title');
+                usernameTitle.innerText = currentUser.username;
+                usernameTitle.removeAttribute('data-i18n'); 
+                
+                document.getElementById('set-memberid').innerText = (t('user_id_label') || 'ID: ') + currentUser.member_id;
+                document.getElementById('set-role').innerText = currentUser.role;
+
                 const navAvatar = document.getElementById('nav-avatar');
                 const navPlaceholder = document.getElementById('nav-avatar-placeholder');
                 const setAvatar = document.getElementById('set-avatar');
@@ -588,20 +693,23 @@
 
         function switchTab(idx, el, titleKey) {
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            el.classList.add('active');
+            if(el) el.classList.add('active'); 
+            
             document.querySelectorAll('.panel').forEach((p, i) => {
                 p.classList.remove('active');
                 if (i === idx) { void p.offsetWidth; p.classList.add('active'); }
             });
             
-            const pageTitleEl = document.getElementById('page-title');
-            pageTitleEl.setAttribute('data-i18n', titleKey);
-            pageTitleEl.innerText = t(titleKey);
+            if(titleKey) {
+                const pageTitleEl = document.getElementById('page-title');
+                pageTitleEl.setAttribute('data-i18n', titleKey);
+                pageTitleEl.innerText = t(titleKey);
+            }
 
             if(idx === 0) loadLatest();
             if(idx === 1) searchBooks('');
             if(idx === 2) loadMyLoans();
-            if(idx === 3) { 
+            if(idx === 3 && currentUser) { 
                 document.getElementById('set-username-title').innerText = currentUser.username; 
                 document.getElementById('set-memberid').innerText = t('dlg_pwd_member_id') + currentUser.member_id;
                 document.getElementById('set-role').innerText = currentUser.role;
@@ -631,8 +739,8 @@
 
                 let tagsHTML = '';
                 if (b.tags && b.tags.trim() !== '') {
-                    const tagList = b.tags.split(',').map(tag => `<span class="md3-chip">${tag.trim()}</span>`).join('');
-                    tagsHTML = `<div class="chip-container">${tagList}</div>`;
+                    const tagList = b.tags.split(',').map(tag => `<span class="static-chip">${tag.trim()}</span>`).join('');
+                    tagsHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; margin-bottom:8px;">${tagList}</div>`;
                 }
 
                 return `
@@ -661,8 +769,10 @@
             
             const tagsContainer = document.getElementById('prevTags');
             if (tags && tags.trim() !== '') {
-                tagsContainer.innerHTML = tags.split(',').map(tag => `<span class="md3-chip">${tag.trim()}</span>`).join('');
+                tagsContainer.innerHTML = tags.split(',').map(tag => `<span class="static-chip">${tag.trim()}</span>`).join('');
                 tagsContainer.style.display = 'flex';
+                tagsContainer.style.flexWrap = 'wrap';
+                tagsContainer.style.gap = '6px';
             } else {
                 tagsContainer.innerHTML = '';
                 tagsContainer.style.display = 'none';
@@ -688,8 +798,8 @@
                 
                 let tagsHTML = '';
                 if (b.tags && b.tags.trim() !== '') {
-                    const tagList = b.tags.split(',').map(tag => `<span class="md3-chip">${tag.trim()}</span>`).join('');
-                    tagsHTML = `<div class="chip-container">${tagList}</div>`;
+                    const tagList = b.tags.split(',').map(tag => `<span class="static-chip">${tag.trim()}</span>`).join('');
+                    tagsHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">${tagList}</div>`;
                 }
 
                 return `
@@ -698,7 +808,7 @@
                     <div class="book-info">
                         <div style="font-weight:bold; font-size:1em; margin-bottom:4px;">${b.title}</div>
                         ${tagsHTML}
-                        <div style="font-size:11px; color:#666; margin-top:4px;">ID: ${b.book_id}</div>
+                        <div style="font-size:11px; color:#666; margin-top:12px;">ID: ${b.book_id}</div>
                     </div>
                 </div>
             `}).join('');
