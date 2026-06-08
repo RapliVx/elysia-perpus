@@ -31,7 +31,7 @@
     "has_account_msg": "Sudah memiliki akun?",
     "btn_go_login": "Masuk di sini",
     "reg_success_title": "Pendaftaran Berhasil",
-    "reg_success_msg": "Akun Anda berhasil dibuat. ",
+    "reg_success_msg": "Akun Anda berhasil dibuat.",
     "reg_failed_title": "Pendaftaran Gagal",
     "btn_close": "Tutup",
 
@@ -61,6 +61,8 @@
     "btn_borrow": "Pinjam Sekarang",
     "quick_filter_lbl": "Pilih Kategori:",
     "filter_all": "Semua",
+    "chart_title": "Grafik Aktivitas Pinjaman (7 Hari Terakhir)",
+    "from_last_month": "dari bulan lalu",
     
     "dlg_backup_title": "Simpan Backup (Save As)",
     "dlg_backup_desc": "Masukkan nama file backup (otomatis ditambah .zip):",
@@ -106,6 +108,8 @@
     "msg_upload_fail": "Gagal mengunggah",
     "msg_server_error": "Kesalahan server.",
     "confirm_delete_user": "Apakah Anda yakin ingin menghapus pengguna ini?",
+    "confirm_delete_book": "Yakin ingin menghapus buku ini? Data peminjaman yang terkait juga akan ikut terhapus!",
+    "msg_book_deleted": "Buku berhasil dihapus!",
     "msg_processing_backup": "Memproses backup data dan aset gambar (Zipping)...",
     "msg_backup_success": "Backup ZIP berhasil diselesaikan! (File: {filename})",
     "msg_backup_fail": "Gagal membuat backup ZIP!",
@@ -117,7 +121,6 @@
     "time_label": "Waktu: ",
     "days_label": "hari",
     "stock_left": "Sisa Stok: {stock} Buku",
-    "chart_title": "Grafik Aktivitas Pinjaman (7 Hari Terakhir)",
 
     "ai_title": "Tanya ElysiaAI",
     "ai_placeholder": "Misal: Apakah ada buku tentang Cerita Romance?",
@@ -160,7 +163,7 @@
     "has_account_msg": "Already have an account?",
     "btn_go_login": "Log in here",
     "reg_success_title": "Registration Successful",
-    "reg_success_msg": "Your account has been created successfully. ",
+    "reg_success_msg": "Your account has been created successfully.",
     "reg_failed_title": "Registration Failed",
     "btn_close": "Close",
 
@@ -190,6 +193,8 @@
     "btn_borrow": "Borrow Now",
     "quick_filter_lbl": "Select Category:",
     "filter_all": "All",
+    "chart_title": "Loan Activity Chart (Last 7 Days)",
+    "from_last_month": "from last month",
     
     "dlg_backup_title": "Save Backup (Save As)",
     "dlg_backup_desc": "Enter backup filename (.zip will be added automatically):",
@@ -235,6 +240,8 @@
     "msg_upload_fail": "Upload failed",
     "msg_server_error": "Server error.",
     "confirm_delete_user": "Are you sure you want to delete this user?",
+    "confirm_delete_book": "Are you sure you want to delete this book? Related loan data will also be deleted!",
+    "msg_book_deleted": "Book successfully deleted!",
     "msg_processing_backup": "Processing data and image backup (Zipping)...",
     "msg_backup_success": "ZIP Backup completed successfully! (File: {filename})",
     "msg_backup_fail": "Failed to create ZIP backup!",
@@ -246,7 +253,6 @@
     "time_label": "Time: ",
     "days_label": "days",
     "stock_left": "{stock} Books Left",
-    "chart_title": "Loan Activity Chart (Last 7 Days)",
 
     "ai_title": "Ask ElysiaAI",
     "ai_placeholder": "E.g: Are there any books about Romance Stories?",

@@ -427,6 +427,36 @@ Tolong bantu pengguna dengan mengikuti panduan berikut ya:
         return { status: "sukses" };
       }, { body: t.Object({ title: t.String(), author: t.String(), tags: t.Optional(t.String()), stock: t.String(), cover: t.Optional(t.File()) }) })
 
+      .delete('/api/admin/books/:id', ({ params, set }) => {
+        try {
+          const book = dbBooks.query('SELECT cover_image FROM books WHERE book_id = $id').get({ $id: params.id }) as any;
+          
+          if (!book) {
+            set.status = 404;
+            return { status: "gagal", message: "Buku tidak ditemukan!" };
+          }
+
+          if (book.cover_image && book.cover_image.startsWith('/covers/')) {
+            const filePath = `./public${book.cover_image}`;
+            if (existsSync(filePath)) {
+              try {
+                unlinkSync(filePath);
+              } catch (e) {
+                console.error("Gagal menghapus file cover:", e);
+              }
+            }
+          }
+
+          dbBooks.query('DELETE FROM books WHERE book_id = $id').run({ $id: params.id });
+          dbLoans.query('DELETE FROM loans WHERE book_id = $id').run({ $id: params.id });
+
+          return { status: "sukses", message: "Buku dan cover berhasil dihapus!" };
+        } catch (e) {
+          set.status = 500;
+          return { status: "gagal", message: "Terjadi kesalahan server saat menghapus buku." };
+        }
+      })
+
       .get('/api/admin/users', () => dbUsers.query('SELECT member_id, username, role, photo FROM users ORDER BY role ASC').all())
       
       .post('/api/admin/users/:id/password', async ({ params, body }) => {

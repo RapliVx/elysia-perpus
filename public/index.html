@@ -204,11 +204,7 @@
         
         .stat-icon-wrapper { width: 48px; height: 48px; border-radius: 12px; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; }
         .stat-value { font-size: 2.5rem; color: var(--md-sys-color-primary); margin: 0 0 4px 0; font-weight: 700; line-height: 1; }
-        .stat-label { color: var(--md-sys-color-on-surface-variant); margin: 0 0 16px 0; font-weight: 500; font-size: 1.05rem; }
-        
-        .stat-trend { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
-        .stat-trend.up { background: rgba(20, 108, 46, 0.12); color: #0f5132; }
-        .stat-trend.down { background: rgba(179, 38, 30, 0.12); color: var(--md-sys-color-error); }
+        .stat-label { color: var(--md-sys-color-on-surface-variant); margin: 0; font-weight: 500; font-size: 1.05rem; }
         
         .user-list-item { background: var(--md-sys-color-surface-container); padding: 20px; border-radius: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
         
@@ -371,27 +367,24 @@
                             <div class="stat-icon-wrapper" style="background: var(--md-sys-color-primary-container);">
                                 <span class="material-symbols-outlined" style="color: var(--md-sys-color-on-primary-container); font-size: 24px;">library_books</span>
                             </div>
-                            <h3 id="stat-books" class="stat-value">0</h3>
+                            <h3 id="stat-books" class="stat-value">...</h3>
                             <p class="stat-label" data-i18n="total_books">Total Buku</p>
-                            <div class="stat-trend up" id="trend-books"><span class="material-symbols-outlined" style="font-size:16px;">trending_up</span> +5% <span style="font-weight:400; font-size:11px; margin-left:2px;" data-i18n="from_last_month">dari bulan lalu</span></div>
                         </div>
                         
                         <div class="admin-stat">
                             <div class="stat-icon-wrapper" style="background: #d3e3fd;">
                                 <span class="material-symbols-outlined" style="color: #041e49; font-size: 24px;">group</span>
                             </div>
-                            <h3 id="stat-users" class="stat-value">0</h3>
+                            <h3 id="stat-users" class="stat-value">...</h3>
                             <p class="stat-label" data-i18n="total_members">Total Member</p>
-                            <div class="stat-trend up" id="trend-users"><span class="material-symbols-outlined" style="font-size:16px;">trending_up</span> +12% <span style="font-weight:400; font-size:11px; margin-left:2px;" data-i18n="from_last_month">dari bulan lalu</span></div>
                         </div>
                         
                         <div class="admin-stat">
                             <div class="stat-icon-wrapper" style="background: #f8dada;">
                                 <span class="material-symbols-outlined" style="color: #410e0b; font-size: 24px;">swap_horiz</span>
                             </div>
-                            <h3 id="stat-loans" class="stat-value">0</h3>
+                            <h3 id="stat-loans" class="stat-value">...</h3>
                             <p class="stat-label" data-i18n="books_borrowed">Buku Dipinjam</p>
-                            <div class="stat-trend down" id="trend-loans"><span class="material-symbols-outlined" style="font-size:16px;">trending_down</span> -2% <span style="font-weight:400; font-size:11px; margin-left:2px;" data-i18n="from_last_month">dari bulan lalu</span></div>
                         </div>
                     </div>
 
@@ -892,12 +885,40 @@
                 <div class="book-card" onclick="openPreview('${b.book_id}', '${b.title.replace(/'/g, "\\'")}', '${b.author.replace(/'/g, "\\'")}', '${b.cover_image || ''}', ${b.stock}, '${(b.tags || '').replace(/'/g, "\\'")}')">
                     ${coverHTML}
                     <div class="book-info">
-                        <div style="font-weight:500; font-size:1.1em; margin-bottom:6px; line-height:1.4;">${b.title}</div>
-                        ${tagsHTML}
-                        <div style="font-size:12px; color:var(--md-sys-color-on-surface-variant); margin-top:16px;">ID: ${b.book_id}</div>
+                        <div>
+                            <div style="font-weight:500; font-size:1.1em; margin-bottom:6px; line-height:1.4;">${b.title}</div>
+                            ${tagsHTML}
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top: 1px solid var(--md-sys-color-surface-variant); padding-top: 12px;">
+                            <div style="font-size:12px; color:var(--md-sys-color-on-surface-variant);">ID: ${b.book_id}</div>
+                            <md-icon-button onclick="event.stopPropagation(); deleteBook('${b.book_id}')" style="--md-sys-color-on-surface-variant: var(--md-sys-color-error); margin: -8px -8px -8px 0;">
+                                <md-icon>delete</md-icon>
+                            </md-icon-button>
+                        </div>
                     </div>
                 </div>
             `}).join('');
+        }
+
+        async function deleteBook(bookId) {
+            if(!confirm(t('confirm_delete_book') || 'Yakin ingin menghapus buku ini? Data peminjaman yang terkait juga akan ikut terhapus!')) return;
+            
+            try {
+                const res = await fetch(`/api/admin/books/${bookId}`, { method: 'DELETE' });
+                const data = await res.json();
+                
+                if (res.ok && data.status === 'sukses') {
+                    loadAdminBooks(); 
+                    loadAdminStats();
+                    loadLatest();
+                    msgContent.innerText = t('msg_book_deleted') || 'Buku berhasil dihapus!';
+                    msgDlg.show();
+                } else {
+                    alert(data.message || 'Gagal menghapus buku dari server.');
+                }
+            } catch(e) {
+                alert('Terjadi kesalahan saat menghapus buku.');
+            }
         }
 
         async function submitNewBook() {
