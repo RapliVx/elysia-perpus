@@ -60,6 +60,31 @@ bun run index.ts
 * **AI Provider**: Google Generative AI (Gemini)
 * **Imaging**: Cropper.js
 
+## API Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/register` | Register a new member account |
+| `POST` | `/api/login` | Login and set JWT session |
+| `POST` | `/api/logout` | Logout and destroy session |
+| `GET` | `/api/user/:id` | Get user profile data |
+| `POST` | `/api/upload-photo` | Upload/update profile picture |
+| `GET` | `/api/books/latest` | Retrieve list of all books |
+| `GET` | `/api/books/search` | Search books by query parameters |
+| `POST` | `/api/pinjam` | Process book loan |
+| `POST` | `/api/kembali` | Process book return and fine calculation |
+| `GET` | `/api/my-loans/:id` | Retrieve active loan history |
+| `POST` | `/api/ask-elysia` | Get AI-powered book recommendations |
+| `GET` | `/api/admin/stats` | System statistics and chart data |
+| `GET` | `/api/admin/backup` | Backup database and assets (.zip) |
+| `POST` | `/api/admin/restore` | Restore database from .sql file |
+| `POST` | `/api/admin/books` | Add a new book |
+| `DELETE` | `/api/admin/books/:id` | Delete book, cover, and related history |
+| `GET` | `/api/admin/users` | List all system users |
+| `POST` | `/api/admin/users/:id/password` | Reset user password |
+| `DELETE` | `/api/admin/users/:id` | Delete a user |
+| `POST` | `/api/admin/loans/:id/simulate-time` | Time simulation (for debugging or setting user borrow time) |
+
 ## Directory Structure
 
 * `index.ts`: Main backend logic, AI integration, and database configuration.
