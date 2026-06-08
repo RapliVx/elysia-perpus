@@ -127,7 +127,7 @@
     "ai_offline": "ElysiaAI sedang offline (Koneksi gagal)."
   },
   "en": {
-    "app_title": "Elysia Library",
+    "app_title": "Elysia Perpus",
     "menu_home": "Home",
     "menu_search": "Advance Search",
     "menu_return": "Returns",
@@ -136,7 +136,7 @@
     "menu_logout": "Logout",
     "toggle_lang": "Indonesia",
     
-    "login_page_title": "Log In - Elysia Library",
+    "login_page_title": "Log In - Elysia Perpus",
     "login_subtitle": "Please log in to your account",
     "username_label": "Username",
     "password_label": "Password",
@@ -149,9 +149,9 @@
     "login_success": "Login Success!",
     "login_conn_error": "Server connection error. Ensure the server is running.",
 
-    "register_page_title": "Register - Elysia Library",
+    "register_page_title": "Register - Elysia Perpus",
     "register_title": "Create Account",
-    "register_subtitle": "Join Elysia Library",
+    "register_subtitle": "Join Elysia Perpus",
     "create_username_label": "Create Username",
     "create_password_label": "Create Password",
     "btn_submit_register": "Register Now",
