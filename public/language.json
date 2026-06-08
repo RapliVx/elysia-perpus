@@ -60,6 +60,7 @@
     "btn_save": "Simpan",
     "btn_borrow": "Pinjam Sekarang",
     "quick_filter_lbl": "Pilih Kategori:",
+    "filter_all": "Semua",
     
     "dlg_backup_title": "Simpan Backup (Save As)",
     "dlg_backup_desc": "Masukkan nama file backup (otomatis ditambah .zip):",
@@ -116,6 +117,7 @@
     "time_label": "Waktu: ",
     "days_label": "hari",
     "stock_left": "Sisa Stok: {stock} Buku",
+    "chart_title": "Grafik Aktivitas Pinjaman (7 Hari Terakhir)",
 
     "ai_title": "Tanya ElysiaAI",
     "ai_placeholder": "Misal: Apakah ada buku tentang Cerita Romance?",
@@ -187,6 +189,7 @@
     "btn_save": "Save",
     "btn_borrow": "Borrow Now",
     "quick_filter_lbl": "Select Category:",
+    "filter_all": "All",
     
     "dlg_backup_title": "Save Backup (Save As)",
     "dlg_backup_desc": "Enter backup filename (.zip will be added automatically):",
@@ -243,6 +246,7 @@
     "time_label": "Time: ",
     "days_label": "days",
     "stock_left": "{stock} Books Left",
+    "chart_title": "Loan Activity Chart (Last 7 Days)",
 
     "ai_title": "Ask ElysiaAI",
     "ai_placeholder": "E.g: Are there any books about Romance Stories?",

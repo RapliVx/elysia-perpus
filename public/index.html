@@ -10,6 +10,8 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script type="importmap">
     { "imports": { "@material/web/": "https://esm.run/@material/web/" } }
@@ -23,11 +25,34 @@
     <style>
         :not(:defined) { display: none !important; }
 
-        :root { --md-sys-color-background: #fdfcff; --md-sys-color-surface: #f3edf7; --md-sys-color-primary: #6750a4; --md-sys-color-outline: #cac4d0; }
+        :root { 
+            --md-sys-color-primary: #6750a4; 
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #eaddff;
+            --md-sys-color-on-primary-container: #21005d;
+            --md-sys-color-secondary-container: #e8def8;
+            --md-sys-color-on-secondary-container: #1d192b;
+            
+            --md-sys-color-error: #b3261e;
+            --md-sys-color-on-error: #ffffff;
+            --md-sys-color-error-container: #f9dedc;
+            --md-sys-color-on-error-container: #410e0b;
+
+            --md-sys-color-background: #fef7ff; 
+            --md-sys-color-on-background: #1d1b20;
+            --md-sys-color-surface: #fef7ff; 
+            --md-sys-color-surface-variant: #e7e0ec;
+            --md-sys-color-on-surface-variant: #49454f;
+            --md-sys-color-surface-container-low: #f7f2fa;
+            --md-sys-color-surface-container: #f3edf7;
+            --md-sys-color-surface-container-high: #ece6f0;
+            --md-sys-color-outline: #79747e; 
+            --md-sys-color-outline-variant: #cac4d0;
+        }
         
         body { 
             background: var(--md-sys-color-background); 
-            color: #1a1c1e; 
+            color: var(--md-sys-color-on-background); 
             font-family: 'Roboto', sans-serif; 
             margin: 0; 
             display: flex; 
@@ -36,180 +61,202 @@
             animation: fadeInBody 0.4s ease forwards;
         }
 
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--md-sys-color-outline); }
+
         @keyframes fadeInBody { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .sidebar { width: 260px; background: linear-gradient(180deg, var(--md-sys-color-surface) 0%, #faf8fc 100%); border-right: 1px solid var(--md-sys-color-outline); display: flex; flex-direction: column; transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); overflow: hidden; white-space: nowrap; box-shadow: 2px 0 16px rgba(0, 0, 0, 0.03); z-index: 10; }
-        .sidebar.hidden { width: 0; border: none; opacity: 0.5; }
-        .nav-item { display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-radius: 8px; cursor: pointer; color: #49454f; font-weight: 500; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); margin-bottom: 4px; }
-        .nav-item:hover { background: rgba(103, 80, 164, 0.08); color: var(--md-sys-color-primary); transform: translateX(6px); }
-        .nav-item.active { background: linear-gradient(90deg, var(--md-sys-color-primary) 0%, #856bce 100%); color: white; box-shadow: 0 4px 12px rgba(103, 80, 164, 0.25); transform: scale(1.02) translateX(4px); }
+        .sidebar { 
+            width: 280px; 
+            background: var(--md-sys-color-surface-container-low); 
+            display: flex; 
+            flex-direction: column; 
+            transition: width 0.3s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s; 
+            overflow: hidden; 
+            white-space: nowrap; 
+            border-radius: 0 16px 16px 0;
+            z-index: 10; 
+        }
+        .sidebar.hidden { width: 0; opacity: 0; }
+        
+        .nav-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            padding: 16px 24px; 
+            border-radius: 100px; 
+            cursor: pointer; 
+            color: var(--md-sys-color-on-surface-variant); 
+            font-weight: 500; 
+            transition: background 0.2s, color 0.2s; 
+            margin-bottom: 4px; 
+        }
+        .nav-item:hover { 
+            background: rgba(29, 25, 43, 0.08); 
+            color: var(--md-sys-color-on-surface-variant); 
+        }
+        .nav-item.active { 
+            background: var(--md-sys-color-secondary-container); 
+            color: var(--md-sys-color-on-primary-container); 
+        }
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+        }
+
         .logo-icon { transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .sidebar:not(.hidden) .logo-icon { transform: rotate(-10deg) scale(1.1); }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; scroll-behavior: smooth; }
-        .header { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--md-sys-color-outline); background: rgba(253, 252, 255, 0.9); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 5; }
-        .content-container { padding: 32px; max-width: 1000px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+
+        .header { 
+            height: 72px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 32px; 
+            background: rgba(254, 247, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            position: sticky; 
+            top: 0; 
+            z-index: 5; 
+        }
+        .header-menu-btn { cursor: pointer; padding: 8px; border-radius: 50%; transition: background-color 0.2s; }
+        .header-menu-btn:hover { background-color: var(--md-sys-color-surface-variant); }
+
+        .content-container { padding: 32px; max-width: 1080px; width: 100%; margin: 0 auto; box-sizing: border-box; }
         
         .panel { display: none; } 
-        .panel.active { display: block; animation: smoothSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        @keyframes smoothSlideUp { 0% { opacity: 0; transform: translateY(20px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        .panel.active { display: block; animation: smoothSlideUp 0.4s cubic-bezier(0.2, 0, 0, 1) forwards; }
+        @keyframes smoothSlideUp { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
 
-        .grid-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-        .book-card { background: white; border: 1px solid var(--md-sys-color-outline); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); display: flex; flex-direction: column; }
-        .book-card:hover { border-color: var(--md-sys-color-primary); transform: translateY(-6px); box-shadow: 0 8px 24px rgba(103, 80, 164, 0.12); }
+        .panel-header-text { margin: 0 0 24px 0 !important; padding-top: 4px !important; color: var(--md-sys-color-on-surface); font-weight: 500; font-size: 1.5rem; line-height: 1.2; }
+        .panel-header-card { margin-top: 18px !important; }
+
+        .grid-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; margin-top: 24px; }
         
-        .book-cover, .book-cover-placeholder { width: 100%; height: 260px; object-fit: cover; border-bottom: 1px solid var(--md-sys-color-outline); }
-        .book-cover-placeholder { display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: var(--md-sys-color-outline); }
+        .book-card { 
+            background: var(--md-sys-color-surface-container); 
+            border: 1px solid var(--md-sys-color-surface-variant);
+            border-radius: 16px; 
+            overflow: hidden; 
+            cursor: pointer; 
+            transition: box-shadow 0.2s, transform 0.2s, background-color 0.2s; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .book-card:hover { 
+            background: var(--md-sys-color-surface-container-high);
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+        }
         
-        .book-info { padding: 16px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+        .book-cover, .book-cover-placeholder { width: 100%; height: 280px; object-fit: cover; }
+        .book-cover-placeholder { display: flex; align-items: center; justify-content: center; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-outline); }
         
-        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 20px; }
+        .book-info { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+
+        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; margin-bottom: 24px; }
         .md3-chip { 
             background: transparent; 
-            color: #49454f; 
+            color: var(--md-sys-color-on-surface-variant); 
             padding: 6px 16px; 
             border-radius: 8px;
-            font-size: 13px; 
+            font-size: 14px; 
             font-weight: 500; 
             display: inline-flex; 
             align-items: center; 
             white-space: nowrap; 
-            border: 1px solid var(--md-sys-color-outline); 
+            border: 1px solid var(--md-sys-color-outline-variant); 
             cursor: pointer; 
-            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            transition: background 0.2s, color 0.2s; 
         }
-        .md3-chip:hover { 
-            background: rgba(29, 25, 43, 0.08); 
-        }
+        .md3-chip:hover { background: rgba(29, 25, 43, 0.08); }
+        .md3-chip.active { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-primary-container); border-color: transparent; }
         
-        .md3-chip.active { 
-            background: var(--md-sys-color-primary); 
-            color: #ffffff;      
-            border-color: var(--md-sys-color-primary); 
-            box-shadow: 0 4px 12px rgba(103, 80, 164, 0.3);
-            transform: scale(1.02);
-        }
-        .md3-chip.active:hover {
-            background: #56428f; /* Sedikit lebih gelap saat hover */
-            box-shadow: 0 6px 16px rgba(103, 80, 164, 0.4);
-        }
+        .static-chip { background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; display: inline-block; }
         
-        .static-chip {
-            background: rgba(103, 80, 164, 0.08);
-            color: #1d192b;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-            display: inline-block;
-        }
-        
-        .stock-label { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .stock-ok { background: rgba(20, 108, 46, 0.1); color: #146c2e; }
-        .stock-empty { background: rgba(179, 38, 30, 0.1); color: #b3261e; }
+        .stock-label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+        .stock-ok { background: rgba(20, 108, 46, 0.12); color: #0f5132; }
+        .stock-empty { background: rgba(179, 38, 30, 0.12); color: var(--md-sys-color-error); }
 
-        .avatar, .avatar-placeholder { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--md-sys-color-primary); margin-bottom: 16px; transition: transform 0.3s; }
-        .avatar-placeholder { display: flex; align-items: center; justify-content: center; background: #eee; color: #9e9e9e; margin: 0 auto 16px auto; }
-        .avatar:hover, .avatar-placeholder:hover { transform: scale(1.05); }
+        .avatar, .avatar-placeholder { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 4px solid var(--md-sys-color-surface-variant); margin-bottom: 16px; }
+        .avatar-placeholder { display: flex; align-items: center; justify-content: center; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-outline); margin: 0 auto 16px auto; }
+        .nav-avatar, .nav-avatar-placeholder { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--md-sys-color-primary-container); }
+        .nav-avatar-placeholder { display: flex; align-items: center; justify-content: center; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-primary); font-size: 20px; }
 
-        .nav-avatar, .nav-avatar-placeholder { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--md-sys-color-primary); }
-        .nav-avatar-placeholder { display: flex; align-items: center; justify-content: center; background: #eee; color: var(--md-sys-color-primary); font-size: 18px; }
-
-        .admin-stat { background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); text-align: center; transition: all 0.3s; }
-        .admin-stat:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
-        .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--md-sys-color-outline); padding-bottom: 16px; overflow-x: auto; }
-        .admin-sec { display: none; animation: fadeIn 0.4s ease; }
+        .admin-tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--md-sys-color-outline-variant); padding-bottom: 16px; overflow-x: auto; }
+        .admin-sec { display: none; animation: fadeInBody 0.3s ease; }
         .admin-sec.active { display: block; }
+
+        .admin-stat { 
+            background: var(--md-sys-color-surface-container); 
+            padding: 24px; 
+            border-radius: 20px; 
+            border: 1px solid var(--md-sys-color-surface-variant); 
+            display: flex; 
+            flex-direction: column; 
+            transition: transform 0.2s, box-shadow 0.2s; 
+        }
+        .admin-stat:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
         
-        .user-list-item { background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--md-sys-color-outline); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .stat-icon-wrapper { width: 48px; height: 48px; border-radius: 12px; display: flex; justify-content: center; align-items: center; margin-bottom: 16px; }
+        .stat-value { font-size: 2.5rem; color: var(--md-sys-color-primary); margin: 0 0 4px 0; font-weight: 700; line-height: 1; }
+        .stat-label { color: var(--md-sys-color-on-surface-variant); margin: 0 0 16px 0; font-weight: 500; font-size: 1.05rem; }
+        
+        .stat-trend { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
+        .stat-trend.up { background: rgba(20, 108, 46, 0.12); color: #0f5132; }
+        .stat-trend.down { background: rgba(179, 38, 30, 0.12); color: var(--md-sys-color-error); }
+        
+        .user-list-item { background: var(--md-sys-color-surface-container); padding: 20px; border-radius: 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
         
         md-dialog { z-index: 1000; position: fixed; }
-        md-dialog::part(container) { border-radius: 28px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2); background: var(--md-sys-color-surface); }
+        md-dialog::part(container) { border-radius: 28px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2); background: var(--md-sys-color-surface-container-high); }
 
         .profile-dropdown {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: white;
-            border: 1px solid var(--md-sys-color-outline);
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            display: none; 
-            flex-direction: column;
-            min-width: 180px;
-            z-index: 100;
-            overflow: hidden;
-            animation: fadeInBody 0.2s ease forwards;
+            position: absolute; top: 56px; right: 32px; background: var(--md-sys-color-surface-container-high); border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: none; flex-direction: column; min-width: 200px; z-index: 100; overflow: hidden;
+            animation: fadeInBody 0.2s cubic-bezier(0.2, 0, 0, 1) forwards;
         }
         .profile-dropdown.show { display: flex; }
-        .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #49454f; transition: background 0.2s; font-size: 14px; font-weight: 500; }
-        .dropdown-item:hover { background: rgba(103, 80, 164, 0.08); color: var(--md-sys-color-primary); }
+        .dropdown-item { padding: 16px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; color: var(--md-sys-color-on-surface); transition: background 0.2s; font-size: 14px; font-weight: 500; }
+        .dropdown-item:hover { background: rgba(29, 25, 43, 0.08); }
 
         .ai-message-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 24px rgba(103,80,164,0.06);
-            border: 1px solid var(--md-sys-color-outline);
-            border-left: 4px solid var(--md-sys-color-primary);
-            font-size: 14px;
-            line-height: 1.6;
-            color: #1d192b;
-            margin-top: 16px;
-            animation: fadeInBody 0.3s ease forwards;
+            background: var(--md-sys-color-surface-container-high); border-radius: 24px; padding: 24px; color: var(--md-sys-color-on-surface);
+            margin-top: 20px; animation: smoothSlideUp 0.3s cubic-bezier(0.2, 0, 0, 1) forwards;
         }
-        .ai-header {
-            font-weight: 700;
-            color: var(--md-sys-color-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 16px;
-            font-size: 1.1em;
-        }
-        .typing-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 8px;
-        }
-        .typing-indicator span {
-            width: 6px;
-            height: 6px;
-            background: var(--md-sys-color-primary);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
+        .ai-header { font-weight: 700; color: var(--md-sys-color-primary); display: flex; align-items: center; gap: 12px; margin-bottom: 16px; font-size: 1.1em; }
+        .typing-indicator { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; }
+        .typing-indicator span { width: 8px; height: 8px; background: var(--md-sys-color-primary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
         .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
         .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
-            40% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
     <aside class="sidebar" id="sidebar">
-        <div style="padding: 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--md-sys-color-outline);">
-            <span class="material-symbols-outlined logo-icon" style="color:var(--md-sys-color-primary)">menu_book</span>
-            <h2 style="margin: 0; font-size: 1.2rem;" data-i18n="app_title">Elysia Perpus</h2>
+        <div style="padding: 24px 32px; display: flex; align-items: center; gap: 16px; margin-bottom: 8px;">
+            <span class="material-symbols-outlined logo-icon" style="color:var(--md-sys-color-primary); font-size: 28px;">menu_book</span>
+            <h2 style="margin: 0; font-size: 1.3rem; color: var(--md-sys-color-on-surface);" data-i18n="app_title">Elysia Perpus</h2>
         </div>
-        <div class="nav-menu" style="padding: 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
+        <div class="nav-menu" style="padding: 0 16px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
             <div class="nav-item active" onclick="switchTab(0, this, 'page_home')"><span class="material-symbols-outlined">home</span><span data-i18n="menu_home">Beranda</span></div>
             <div class="nav-item" onclick="switchTab(1, this, 'menu_search')"><span class="material-symbols-outlined">search</span><span data-i18n="menu_search">Advance Search</span></div>
             <div class="nav-item" onclick="switchTab(2, this, 'menu_return')"><span class="material-symbols-outlined">inventory</span><span data-i18n="menu_return">Pengembalian</span></div>
             <div class="nav-item" onclick="switchTab(3, this, 'menu_settings')"><span class="material-symbols-outlined">settings</span><span data-i18n="menu_settings">Settings</span></div>
-            <div id="nav-admin" class="nav-item" onclick="switchTab(4, this, 'menu_admin')" style="display: none; border-top: 1px dashed var(--md-sys-color-outline); margin-top: 8px; padding-top: 16px;">
+            <div id="nav-admin" class="nav-item" onclick="switchTab(4, this, 'menu_admin')" style="display: none; border-top: 1px solid var(--md-sys-color-outline-variant); margin-top: 12px; padding-top: 16px; border-radius: 0;">
                 <span class="material-symbols-outlined">admin_panel_settings</span><span data-i18n="menu_admin">Admin Dashboard</span>
             </div>
         </div>
-        <div style="padding: 16px; border-top: 1px solid var(--md-sys-color-outline);">
-            <div class="nav-item" onclick="toggleLanguage()" style="color: #6750a4; background: rgba(103, 80, 164, 0.08);">
+        <div style="padding: 16px;">
+            <div class="nav-item" onclick="toggleLanguage()" style="color: var(--md-sys-color-primary);">
                 <span class="material-symbols-outlined">translate</span><span data-i18n="toggle_lang">English</span>
             </div>
-            <div class="nav-item" onclick="logout()" style="color: #b3261e; margin-top: 8px;">
+            <div class="nav-item" onclick="logout()" style="color: var(--md-sys-color-error); margin-top: 4px;">
                 <span class="material-symbols-outlined">logout</span><span data-i18n="menu_logout">Keluar</span>
             </div>
         </div>
@@ -217,19 +264,19 @@
 
     <main class="main-content">
         <div class="header">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <span class="material-symbols-outlined" onclick="document.getElementById('sidebar').classList.toggle('hidden')" style="cursor:pointer;">menu</span>
-                <h1 id="page-title" style="margin:0; font-size: 1.2rem;" data-i18n="page_home">Beranda</h1>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span class="material-symbols-outlined header-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('hidden')">menu</span>
+                <h1 id="page-title" style="margin:0; font-size: 1.4rem; font-weight: 500; color: var(--md-sys-color-on-surface);" data-i18n="page_home">Beranda</h1>
             </div>
             
             <div style="position: relative;">
-                <div id="user-display" onclick="toggleProfileDropdown(event)" style="cursor: pointer; color: var(--md-sys-color-primary); font-weight: bold; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 24px; transition: background 0.3s;">
+                <div id="user-display" onclick="toggleProfileDropdown(event)" style="cursor: pointer; color: var(--md-sys-color-on-surface); font-weight: 500; display: flex; align-items: center; gap: 12px; padding: 6px 12px 6px 6px; border-radius: 100px; transition: background 0.2s;">
                     <div id="nav-avatar-container">
                         <img id="nav-avatar" class="nav-avatar" src="" style="display:none;">
                         <div id="nav-avatar-placeholder" class="nav-avatar-placeholder"><span class="material-symbols-outlined">person</span></div>
                     </div>
                     <span id="nav-username"></span>
-                    <span class="material-symbols-outlined" style="font-size: 20px;">expand_more</span>
+                    <span class="material-symbols-outlined" style="font-size: 20px; color: var(--md-sys-color-outline);">expand_more</span>
                 </div>
 
                 <div id="profileDropdown" class="profile-dropdown">
@@ -241,7 +288,7 @@
                         <span class="material-symbols-outlined">translate</span>
                         <span data-i18n="toggle_lang">English</span>
                     </div>
-                    <div class="dropdown-item" onclick="logout()" style="color: #b3261e; border-top: 1px solid var(--md-sys-color-outline);">
+                    <div class="dropdown-item" onclick="logout()" style="color: var(--md-sys-color-error); border-top: 1px solid var(--md-sys-color-outline-variant);">
                         <span class="material-symbols-outlined">logout</span>
                         <span data-i18n="menu_logout">Keluar</span>
                     </div>
@@ -251,33 +298,33 @@
 
         <div class="content-container">
             <div id="p0" class="panel active">
-                <h2 style="color:var(--md-sys-color-primary); margin-top:0;" data-i18n="latest_updated">Terakhir Diperbarui</h2>
+                <h2 class="panel-header-text" data-i18n="latest_updated">Terakhir Diperbarui</h2>
                 <div class="grid-list" id="latest-list"></div>
             </div>
 
             <div id="p1" class="panel">
-                <div style="background: linear-gradient(135deg, rgba(103,80,164,0.1) 0%, rgba(133,107,206,0.1) 100%); padding: 24px; border-radius: 20px; margin-bottom: 24px; border: 1px solid var(--md-sys-color-primary); box-shadow: 0 4px 16px rgba(103,80,164,0.06);">
-                    <h3 style="margin-top: 0; margin-bottom: 20px; color: var(--md-sys-color-primary); display: flex; align-items: center; gap: 8px; font-size: 1.2rem;">
+                <div class="panel-header-card" style="background: var(--md-sys-color-primary-container); padding: 32px; border-radius: 28px; margin-bottom: 32px;">
+                    <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--md-sys-color-on-primary-container); display: flex; align-items: center; gap: 12px; font-size: 1.4rem; font-weight: 500;">
                         <span class="material-symbols-outlined">smart_toy</span> <span data-i18n="ai_title">Tanya ElysiaAI</span>
                     </h3>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <md-outlined-text-field id="ai-query" data-i18n="ai_placeholder" label="Misal: Apakah ada buku tentang Linux?" style="flex: 1; min-width: 250px; background: white;" onkeypress="if(event.key === 'Enter') askElysiaAI()"></md-outlined-text-field>
-                        <md-filled-button onclick="askElysiaAI()" style="--md-sys-color-primary: #6750a4; height: 56px;">
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <md-outlined-text-field id="ai-query" data-i18n="ai_placeholder" label="Misal: Apakah ada buku tentang Linux?" style="flex: 1; min-width: 250px; --md-sys-color-surface: transparent;" onkeypress="if(event.key === 'Enter') askElysiaAI()"></md-outlined-text-field>
+                        <md-filled-button onclick="askElysiaAI()" style="height: 56px; border-radius: 16px;">
                             <md-icon slot="icon">auto_awesome</md-icon> <span data-i18n="ai_button">Tanya AI</span>
                         </md-filled-button>
                     </div>
                     <div id="ai-response" style="display: none;"></div>
                 </div>
 
-                <md-divider style="margin-bottom: 24px;"></md-divider>
+                <md-divider style="margin-bottom: 32px;"></md-divider>
 
-                <h3 style="color: var(--md-sys-color-primary); margin-top: 0; font-size: 1.2rem;">Pencarian & Filter</h3>
+                <h3 style="color: var(--md-sys-color-on-surface); font-weight: 500; margin-top: 0; font-size: 1.3rem;" data-i18n="search_filter_title">Pencarian & Filter</h3>
                 <md-outlined-text-field id="search-input" data-i18n="search_label" label="Cari judul, penulis, atau genre (misal: Romance)..." style="width: 100%" oninput="searchBooks(this.value)">
-                    <span slot="leading-icon" class="material-symbols-outlined">search</span>
+                    <md-icon slot="leading-icon">search</md-icon>
                 </md-outlined-text-field>
                 
-                <div style="margin-top: 16px;">
-                    <span style="font-size: 13px; font-weight: 500; color: #49454f; display: block; margin-bottom: 8px;" data-i18n="quick_filter_lbl">Pilih Kategori:</span>
+                <div style="margin-top: 24px;">
+                    <span style="font-size: 14px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); display: block; margin-bottom: 12px;" data-i18n="quick_filter_lbl">Pilih Kategori:</span>
                     <div id="quick-filters" class="chip-container"></div>
                 </div>
 
@@ -285,66 +332,99 @@
             </div>
 
             <div id="p2" class="panel">
-                <h2 style="color:var(--md-sys-color-primary); margin-top:0;" data-i18n="borrowed_books">Buku yang Sedang Dipinjam</h2>
+                <h2 class="panel-header-text" data-i18n="borrowed_books">Buku yang Sedang Dipinjam</h2>
                 <div id="loan-list"></div>
             </div>
 
             <div id="p3" class="panel">
-                <div style="background:var(--md-sys-color-surface); padding:32px; border-radius:24px; text-align:center; box-shadow: 0 4px 24px rgba(0,0,0,0.04);">
+                <div class="panel-header-card" style="background:var(--md-sys-color-surface-container); padding:48px 32px; border-radius:28px; text-align:center;">
                     <div id="avatar-container">
                         <img id="set-avatar" class="avatar" src="" style="display:none;">
-                        <div id="set-avatar-placeholder" class="avatar-placeholder"><span class="material-symbols-outlined" style="font-size:64px;">person</span></div>
+                        <div id="set-avatar-placeholder" class="avatar-placeholder"><span class="material-symbols-outlined" style="font-size:72px;">person</span></div>
                     </div>
-                    <h2 id="set-username-title" style="margin: 8px 0;" data-i18n="loading">Memuat...</h2>
-                    <p id="set-memberid" style="color:#666; margin: 0;"></p>
-                    <p><span data-i18n="status_label">Status: </span><b id="set-role" style="color: var(--md-sys-color-primary); text-transform: uppercase;"></b></p>
-                    <md-divider style="margin: 24px 0;"></md-divider>
-                    <h3 style="color: #49454f;" data-i18n="change_pfp">Ubah Foto Profil</h3>
+                    <h2 id="set-username-title" style="margin: 16px 0 8px 0; font-weight: 500; font-size: 1.8rem; color: var(--md-sys-color-on-surface);" data-i18n="loading">Memuat...</h2>
+                    <p id="set-memberid" style="color: var(--md-sys-color-on-surface-variant); font-size: 1.1rem; margin: 0;"></p>
+                    <div style="margin-top: 16px; display: inline-block; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); padding: 8px 24px; border-radius: 100px; font-weight: 500;">
+                        <span data-i18n="status_label">Status: </span><span id="set-role" style="text-transform: capitalize;"></span>
+                    </div>
+                    <md-divider style="margin: 32px 0;"></md-divider>
+                    <h3 style="color: var(--md-sys-color-on-surface-variant); font-weight: 400; font-size: 1.1rem; margin-bottom: 24px;" data-i18n="change_pfp">Ubah Foto Profil</h3>
                     <div style="display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap;">
                         <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
-                        <md-filled-button onclick="document.getElementById('photoInput').click()"><md-icon slot="icon">image</md-icon> <span data-i18n="choose_photo">Pilih Foto</span></md-filled-button>
+                        <md-filled-tonal-button onclick="document.getElementById('photoInput').click()"><md-icon slot="icon">image</md-icon> <span data-i18n="choose_photo">Pilih Foto</span></md-filled-tonal-button>
                     </div>
                 </div>
             </div>
 
             <div id="p4" class="panel">
-                <div class="admin-tabs">
+                <div class="admin-tabs panel-header-card">
                     <md-filter-chip id="tab-stat" selected onclick="switchAdminSec('stat')"><span data-i18n="admin_summary">Statistik</span></md-filter-chip>
                     <md-filter-chip id="tab-buku" onclick="switchAdminSec('buku')"><span data-i18n="book_list">Kelola Buku</span></md-filter-chip>
                     <md-filter-chip id="tab-user" onclick="switchAdminSec('user')"><span data-i18n="user_list">Kelola Pengguna</span></md-filter-chip>
                 </div>
 
                 <div id="sec-stat" class="admin-sec active">
-                    <h2 style="color:var(--md-sys-color-primary); margin-top:0;" data-i18n="admin_summary">Ringkasan Sistem</h2>
+                    <h2 style="color:var(--md-sys-color-on-surface); font-weight: 500; margin-top:0;" data-i18n="admin_summary">Ringkasan Sistem</h2>
+                    
                     <div class="grid-list" id="admin-stats">
-                        <div class="admin-stat"><h3 id="stat-books">0</h3><p style="color:#666; margin-bottom:0;" data-i18n="total_books">Total Buku</p></div>
-                        <div class="admin-stat"><h3 id="stat-users">0</h3><p style="color:#666; margin-bottom:0;" data-i18n="total_members">Total Member</p></div>
-                        <div class="admin-stat"><h3 id="stat-loans">0</h3><p style="color:#666; margin-bottom:0;" data-i18n="books_borrowed">Buku Dipinjam</p></div>
+                        <div class="admin-stat">
+                            <div class="stat-icon-wrapper" style="background: var(--md-sys-color-primary-container);">
+                                <span class="material-symbols-outlined" style="color: var(--md-sys-color-on-primary-container); font-size: 24px;">library_books</span>
+                            </div>
+                            <h3 id="stat-books" class="stat-value">0</h3>
+                            <p class="stat-label" data-i18n="total_books">Total Buku</p>
+                            <div class="stat-trend up" id="trend-books"><span class="material-symbols-outlined" style="font-size:16px;">trending_up</span> +5% <span style="font-weight:400; font-size:11px; margin-left:2px;" data-i18n="from_last_month">dari bulan lalu</span></div>
+                        </div>
+                        
+                        <div class="admin-stat">
+                            <div class="stat-icon-wrapper" style="background: #d3e3fd;">
+                                <span class="material-symbols-outlined" style="color: #041e49; font-size: 24px;">group</span>
+                            </div>
+                            <h3 id="stat-users" class="stat-value">0</h3>
+                            <p class="stat-label" data-i18n="total_members">Total Member</p>
+                            <div class="stat-trend up" id="trend-users"><span class="material-symbols-outlined" style="font-size:16px;">trending_up</span> +12% <span style="font-weight:400; font-size:11px; margin-left:2px;" data-i18n="from_last_month">dari bulan lalu</span></div>
+                        </div>
+                        
+                        <div class="admin-stat">
+                            <div class="stat-icon-wrapper" style="background: #f8dada;">
+                                <span class="material-symbols-outlined" style="color: #410e0b; font-size: 24px;">swap_horiz</span>
+                            </div>
+                            <h3 id="stat-loans" class="stat-value">0</h3>
+                            <p class="stat-label" data-i18n="books_borrowed">Buku Dipinjam</p>
+                            <div class="stat-trend down" id="trend-loans"><span class="material-symbols-outlined" style="font-size:16px;">trending_down</span> -2% <span style="font-weight:400; font-size:11px; margin-left:2px;" data-i18n="from_last_month">dari bulan lalu</span></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 32px; background: var(--md-sys-color-surface-container); padding: 32px; border-radius: 24px; border: 1px solid var(--md-sys-color-surface-variant);">
+                        <h3 style="margin-top: 0; color: var(--md-sys-color-on-surface); font-weight: 500; margin-bottom: 24px;" data-i18n="chart_title">Grafik Aktivitas Pinjaman (7 Hari Terakhir)</h3>
+                        <div style="position: relative; height: 250px; width: 100%;">
+                            <canvas id="loanActivityChart"></canvas>
+                        </div>
                     </div>
                     
-                    <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap;">
+                    <div style="margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--md-sys-color-outline-variant); display: flex; justify-content: flex-end; gap: 16px; flex-wrap: wrap;">
                         <input type="file" id="restoreInput" accept=".sql" style="display: none;" onchange="handleRestoreFile(event)">
                         
-                        <md-filled-tonal-button onclick="triggerRestore()" style="--md-sys-color-secondary-container: #f8dada; --md-sys-color-on-secondary-container: #b3261e;">
+                        <md-filled-tonal-button onclick="triggerRestore()" style="--md-sys-color-secondary-container: var(--md-sys-color-error-container); --md-sys-color-on-secondary-container: var(--md-sys-color-on-error-container);">
                             <md-icon slot="icon">upload</md-icon> <span data-i18n="restore_db">Restore Database</span>
                         </md-filled-tonal-button>
                         
-                        <md-filled-button onclick="openBackupDlg()" style="--md-sys-color-primary: #146c2e;">
+                        <md-filled-button onclick="openBackupDlg()">
                             <md-icon slot="icon">download</md-icon> <span data-i18n="backup_db">Backup Data (ZIP)</span>
                         </md-filled-button>
                     </div>
                 </div>
 
                 <div id="sec-buku" class="admin-sec">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                        <h2 style="color:var(--md-sys-color-primary); margin:0;" data-i18n="book_list">Daftar Buku</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                        <h2 style="color:var(--md-sys-color-on-surface); font-weight: 500; margin:0;" data-i18n="book_list">Daftar Buku</h2>
                         <md-filled-button onclick="document.getElementById('addBookDlg').show()"><md-icon slot="icon">add</md-icon> <span data-i18n="add_book">Tambah Buku</span></md-filled-button>
                     </div>
                     <div class="grid-list" id="admin-book-list"></div>
                 </div>
 
                 <div id="sec-user" class="admin-sec">
-                    <h2 style="color:var(--md-sys-color-primary); margin-top:0;" data-i18n="user_list">Daftar Pengguna</h2>
+                    <h2 style="color:var(--md-sys-color-on-surface); font-weight: 500; margin-top:0; margin-bottom:24px;" data-i18n="user_list">Daftar Pengguna</h2>
                     <div id="admin-user-list"></div>
                 </div>
             </div>
@@ -353,19 +433,19 @@
 
     <md-dialog id="backupDlg">
         <div slot="headline" data-i18n="dlg_backup_title">Simpan Backup (Save As)</div>
-        <div slot="content" style="width:300px; padding-top:8px;">
-            <p style="font-size:14px; color:#666; margin-top:0;" data-i18n="dlg_backup_desc">Masukkan nama file backup (otomatis ditambah .zip):</p>
+        <div slot="content" style="width:320px; padding-top:16px;">
+            <p style="font-size:14px; color:var(--md-sys-color-on-surface-variant); margin-top:0; margin-bottom:24px;" data-i18n="dlg_backup_desc">Masukkan nama file backup (otomatis ditambah .zip):</p>
             <md-outlined-text-field id="backupFilenameInput" data-i18n="dlg_backup_label" label="Nama File" value="backup_perpus" style="width:100%"></md-outlined-text-field>
         </div>
         <div slot="actions">
             <md-text-button onclick="backupDlg.close()" data-i18n="btn_cancel">Batal</md-text-button>
-            <md-filled-button onclick="processBackup()" style="--md-sys-color-primary: #146c2e;" data-i18n="btn_download">Download</md-filled-button>
+            <md-filled-button onclick="processBackup()" data-i18n="btn_download">Download</md-filled-button>
         </div>
     </md-dialog>
 
     <md-dialog id="cropDlg">
         <div slot="headline" data-i18n="dlg_crop_title">Sesuaikan Foto</div>
-        <div slot="content" style="width:100%; max-width:400px; height:350px; background:#000; overflow:hidden; display:flex; justify-content:center; align-items:center;">
+        <div slot="content" style="width:100%; max-width:400px; height:350px; background:var(--md-sys-color-surface-container); overflow:hidden; display:flex; justify-content:center; align-items:center; border-radius: 16px;">
             <img id="image-to-crop" src="" style="max-width:100%; display:block;">
         </div>
         <div slot="actions">
@@ -375,29 +455,29 @@
     </md-dialog>
 
     <md-dialog id="prevDlg">
-        <div slot="headline" id="prevTitle" style="font-size: 1.5rem; font-weight: 700; color: var(--md-sys-color-primary); line-height: 1.3;"></div>
+        <div slot="headline" id="prevTitle" style="font-size: 1.5rem; font-weight: 500; color: var(--md-sys-color-on-surface); line-height: 1.3;"></div>
         
-        <div slot="content" style="display: flex; flex-direction: column; gap: 16px; padding-top: 8px;">
+        <div slot="content" style="display: flex; flex-direction: column; gap: 20px; padding-top: 16px;">
 
-            <div style="width: 100%; background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline); border-radius: 16px; box-sizing: border-box; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 320px;">
+            <div style="width: 100%; background: var(--md-sys-color-surface-container); border-radius: 20px; box-sizing: border-box; overflow: hidden; display: flex; justify-content: center; align-items: center; min-height: 320px;">
                 <img id="prevCover" src="" style="width: 100%; height: 320px; object-fit: cover; object-position: center 25%; display: none;">
                 
                 <div id="prevCoverPlaceholder" style="display: none; flex-direction: column; align-items: center; color: var(--md-sys-color-outline);">
-                    <span class="material-symbols-outlined" style="font-size: 80px; margin-bottom: 8px;">menu_book</span>
-                    <span style="font-size: 14px; font-weight: 500;" data-i18n="dlg_prev_no_cover">Tidak Ada Sampul</span>
+                    <span class="material-symbols-outlined" style="font-size: 80px; margin-bottom: 12px;">menu_book</span>
+                    <span style="font-size: 16px; font-weight: 500;" data-i18n="dlg_prev_no_cover">Tidak Ada Sampul</span>
                 </div>
             </div>
             
             <div>
-                <div id="prevTags" style="margin-bottom: 8px;"></div>
-                <p id="prevAuthor" style="color: #49454f; margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 500;"></p>
-                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(103, 80, 164, 0.08); padding: 8px 16px; border-radius: 12px;">
-                    <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary); font-size: 20px;">inventory_2</span>
-                    <span id="prevStock" style="color:var(--md-sys-color-primary); font-weight: bold; margin: 0; font-size: 1rem;"></span>
+                <div id="prevTags" style="margin-bottom: 12px;"></div>
+                <p id="prevAuthor" style="color: var(--md-sys-color-on-surface-variant); margin: 0 0 20px 0; font-size: 1.1rem; font-weight: 400;"></p>
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--md-sys-color-secondary-container); padding: 12px 20px; border-radius: 12px;">
+                    <span class="material-symbols-outlined" style="color: var(--md-sys-color-on-secondary-container); font-size: 24px;">inventory_2</span>
+                    <span id="prevStock" style="color:var(--md-sys-color-on-secondary-container); font-weight: 500; margin: 0; font-size: 1.1rem;"></span>
                 </div>
             </div>
             
-            <p style="color: #666; margin: 0; font-size: 0.9rem; line-height: 1.5;" data-i18n="dlg_prev_auto_return">Buku ini otomatis dipinjamkan selama 7 hari.</p>
+            <p style="color: var(--md-sys-color-on-surface-variant); margin: 0; font-size: 0.95rem; line-height: 1.5;" data-i18n="dlg_prev_auto_return">Buku ini otomatis dipinjamkan selama 7 hari.</p>
         </div>
         
         <div slot="actions">
@@ -408,15 +488,15 @@
 
     <md-dialog id="addBookDlg">
         <div slot="headline" data-i18n="dlg_add_book_title">Tambah Buku Baru</div>
-        <form id="addBookForm" slot="content" style="display:flex; flex-direction:column; gap:16px; width:300px; padding-top:8px;">
+        <form id="addBookForm" slot="content" style="display:flex; flex-direction:column; gap:20px; width:340px; padding-top:16px;">
             <md-outlined-text-field id="newBookTitle" data-i18n="dlg_add_book_title_lbl" label="Judul Buku" required></md-outlined-text-field>
             <md-outlined-text-field id="newBookAuthor" data-i18n="dlg_add_book_author_lbl" label="Penulis" required></md-outlined-text-field>
             <md-outlined-text-field id="newBookTags" data-i18n="dlg_add_book_tags_lbl" label="Genre / Tags (Pisahkan dengan koma)"></md-outlined-text-field>
             
             <md-outlined-text-field id="newBookStock" type="number" data-i18n="dlg_add_book_stock_lbl" label="Jumlah Stok" value="1" required></md-outlined-text-field>
-            <div>
-                <label style="font-size:12px; color:#666; display:block; margin-bottom:8px;" data-i18n="dlg_add_book_cover_lbl">Foto Sampul (Opsional)</label>
-                <input type="file" id="newBookCover" accept="image/*" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+            <div style="background: var(--md-sys-color-surface-container-low); padding: 16px; border-radius: 12px;">
+                <label style="font-size:13px; font-weight: 500; color:var(--md-sys-color-on-surface-variant); display:block; margin-bottom:12px;" data-i18n="dlg_add_book_cover_lbl">Foto Sampul (Opsional)</label>
+                <input type="file" id="newBookCover" accept="image/*" style="width:100%; font-family: inherit;">
             </div>
         </form>
         <div slot="actions">
@@ -427,8 +507,8 @@
 
     <md-dialog id="changePwdDlg">
         <div slot="headline" data-i18n="dlg_pwd_title">Ubah Kata Sandi</div>
-        <div slot="content" style="width:300px; padding-top:8px;">
-            <p style="margin-top:0; font-size:14px; color:#666;"><span data-i18n="dlg_pwd_member_id">Member ID: </span><b id="pwdTargetId"></b></p>
+        <div slot="content" style="width:320px; padding-top:16px;">
+            <p style="margin-top:0; margin-bottom:24px; font-size:14px; color:var(--md-sys-color-on-surface-variant);"><span data-i18n="dlg_pwd_member_id">Member ID: </span><b id="pwdTargetId" style="color: var(--md-sys-color-on-surface);"></b></p>
             <md-outlined-text-field id="newPwdInput" type="password" data-i18n="dlg_pwd_new_lbl" label="Sandi Baru" style="width:100%"></md-outlined-text-field>
         </div>
         <div slot="actions">
@@ -439,29 +519,34 @@
 
     <md-dialog id="userLoansDlg">
         <div slot="headline" data-i18n="dlg_loans_title">Daftar Pinjaman</div>
-        <div slot="content" style="width: 100%; min-width: 350px; max-height: 400px; overflow-y: auto;">
-            <p id="userLoanSummary" style="margin-top:0; color:var(--md-sys-color-primary); font-weight:bold;"></p>
-            <div id="userLoanDetails" style="display:flex; flex-direction:column; gap:12px;"></div>
+        <div slot="content" style="width: 100%; min-width: 380px; max-height: 450px; overflow-y: auto; padding-top: 16px;">
+            <p id="userLoanSummary" style="margin-top:0; margin-bottom:20px; color:var(--md-sys-color-primary); font-weight:500; font-size: 1.1rem;"></p>
+            <div id="userLoanDetails" style="display:flex; flex-direction:column; gap:16px;"></div>
         </div>
         <div slot="actions"><md-text-button onclick="userLoansDlg.close()" data-i18n="dlg_loans_close">Tutup</md-text-button></div>
     </md-dialog>
     
     <md-dialog id="timeMachineDlg">
-        <div slot="headline" style="color: #b3261e; display: flex; align-items: center; gap: 8px;">
+        <div slot="headline" style="color: var(--md-sys-color-error); display: flex; align-items: center; gap: 12px; font-weight: 500;">
             <span class="material-symbols-outlined">history</span> <span data-i18n="dlg_tm_title">Mesin Waktu</span>
         </div>
-        <div slot="content" style="width:300px; padding-top:8px;">
-            <p style="margin-top:0; font-size:14px; color:#49454f;"><span data-i18n="dlg_tm_desc">Atur durasi pinjaman untuk ID: </span><b id="tmLoanIdText"></b></p>
+        <div slot="content" style="width:320px; padding-top:16px;">
+            <p style="margin-top:0; font-size:14px; color:var(--md-sys-color-on-surface-variant); margin-bottom: 24px;"><span data-i18n="dlg_tm_desc">Atur durasi pinjaman untuk ID: </span><b id="tmLoanIdText" style="color: var(--md-sys-color-on-surface);"></b></p>
             <md-outlined-text-field id="tmDaysInput" type="number" data-i18n="dlg_tm_days_lbl" label="Jumlah Hari" value="1" style="width:100%;"></md-outlined-text-field>
-            <p style="font-size:12px; color:#666; margin-top:8px; line-height:1.4;" data-i18n="dlg_tm_warn">*Isi angka positif (misal: 10) untuk memajukan hari (simulasi telat).<br>*Isi angka negatif (misal: -2) untuk memundurkan hari.</p>
+            <div style="background: var(--md-sys-color-surface-container-high); padding: 12px; border-radius: 8px; margin-top: 16px;">
+                <p style="font-size:12px; color:var(--md-sys-color-on-surface-variant); margin:0; line-height:1.5;" data-i18n="dlg_tm_warn"><b>Panduan:</b><br>• Isi angka positif (misal: 10) memajukan hari.<br>• Isi angka negatif (misal: -2) memundurkan hari.</p>
+            </div>
         </div>
         <div slot="actions">
             <md-text-button onclick="timeMachineDlg.close()" data-i18n="btn_cancel">Batal</md-text-button>
-            <md-filled-button onclick="submitTimeMachine()" style="--md-sys-color-primary: #b3261e;" data-i18n="dlg_tm_btn">Ubah Waktu</md-filled-button>
+            <md-filled-button onclick="submitTimeMachine()" style="--md-sys-color-primary: var(--md-sys-color-error);" data-i18n="dlg_tm_btn">Ubah Waktu</md-filled-button>
         </div>
     </md-dialog>
 
-    <md-dialog id="msgDlg"><div slot="content" id="msgContent"></div><div slot="actions"><md-filled-button onclick="msgDlg.close()" data-i18n="msg_ok">OK</md-filled-button></div></md-dialog>
+    <md-dialog id="msgDlg">
+        <div slot="content" id="msgContent" style="padding-top: 24px; font-size: 1.1rem; color: var(--md-sys-color-on-surface);"></div>
+        <div slot="actions"><md-text-button onclick="msgDlg.close()" data-i18n="msg_ok">OK</md-text-button></div>
+    </md-dialog>
 
     <script>
         const memberId = localStorage.getItem('savedMemberId');
@@ -472,6 +557,8 @@
         let tmSelectedLoanId = null;
         let tmSelectedUid = null;
         let tmSelectedUname = null;
+
+        let adminChart = null; 
 
         let i18nData = {};
         let currentLang = localStorage.getItem('appLang') || 'id';
@@ -540,13 +627,13 @@
                 
                 if (data.status === 'escalate') {
                     resEl.innerHTML = `
-                    <div class="ai-message-card" style="border-left-color: #b3261e;">
-                        <div class="ai-header" style="color: #b3261e;">
+                    <div class="ai-message-card" style="border-left: 4px solid var(--md-sys-color-error);">
+                        <div class="ai-header" style="color: var(--md-sys-color-error);">
                             <span class="material-symbols-outlined">smart_toy</span> ElysiaAI:
                         </div>
                         ${t('ai_escalate') || 'Buku tidak ditemukan.'}
                         <br><br>
-                        <md-text-button style="--md-sys-color-primary: #b3261e;" onclick="alert('${t('ai_contact_admin_alert') || 'Hubungi admin'}')">
+                        <md-text-button style="--md-sys-color-primary: var(--md-sys-color-error);" onclick="alert('${t('ai_contact_admin_alert') || 'Hubungi admin'}')">
                             <md-icon slot="icon">support_agent</md-icon> ${t('ai_contact_admin') || 'Eskalasi ke Admin'}
                         </md-text-button>
                     </div>`;
@@ -571,24 +658,21 @@
                     aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); 
                     aiText = aiText.replace(/\*(.*?)\*/g, '<i>$1</i>');     
                     aiText = aiText.replace(/\n-\s/g, '<br>• ');            
-                    aiText = aiText.replace(/\n\*\s/g, '<br>• ');           
+                    aiText = aiText.replace(/\n\*\s/g, '<br>• ');            
                     aiText = aiText.replace(/\n/g, '<br>');                 
 
                     resEl.innerHTML = `
-                    <div class="ai-message-card">
+                    <div class="ai-message-card" style="border-left: 4px solid var(--md-sys-color-primary);">
                         <div class="ai-header">
                             <span class="material-symbols-outlined">auto_awesome</span> ElysiaAI:
                         </div>
-                        <div>
+                        <div style="line-height: 1.6;">
                             ${aiText}
-                        </div>
-                        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--md-sys-color-outline); font-size: 11px; color: #666;">
-                            *Jika buku yang disarankan tidak muncul di pencarian di bawah, berarti buku tersebut belum didata ke dalam sistem perpustakaan oleh Admin.
                         </div>
                     </div>`;
                 }
             } catch(e) {
-                resEl.innerHTML = `<span style="color: #b3261e;">${t('ai_offline') || 'AI Sedang Offline'}</span>`;
+                resEl.innerHTML = `<span style="color: var(--md-sys-color-error); font-weight: 500;">${t('ai_offline') || 'AI Sedang Offline'}</span>`;
             }
         }
 
@@ -622,7 +706,10 @@
                 
                 const filterContainer = document.getElementById('quick-filters');
                 
-                let html = `<span class="md3-chip active" id="chip-all" onclick="applyFilter('', this)">Semua</span>`;
+                let defaultAll = currentLang === 'en' ? 'All' : 'Semua';
+                let textAll = (i18nData[currentLang] && i18nData[currentLang]['filter_all']) ? i18nData[currentLang]['filter_all'] : defaultAll;
+
+                let html = `<span class="md3-chip active" id="chip-all" onclick="applyFilter('', this)" data-i18n="filter_all">${textAll}</span>`;
                 
                 Array.from(tagSet).forEach(tag => {
                     html += `<span class="md3-chip" onclick="applyFilter('${tag}', this)">${tag}</span>`;
@@ -730,16 +817,16 @@
             document.getElementById(id).innerHTML = books.map(b => {
                 const coverHTML = b.cover_image 
                     ? `<img src="${b.cover_image}" class="book-cover" alt="Cover">`
-                    : `<div class="book-cover-placeholder"><span class="material-symbols-outlined" style="font-size:48px;">menu_book</span></div>`;
+                    : `<div class="book-cover-placeholder"><span class="material-symbols-outlined" style="font-size:64px;">menu_book</span></div>`;
                 
                 const stockBadge = b.stock > 0 
-                    ? `<span class="stock-label stock-ok"><md-icon style="font-size:14px;">check_circle</md-icon> ${t('stock') || 'Stok:'} ${b.stock}</span>` 
-                    : `<span class="stock-label stock-empty"><md-icon style="font-size:14px;">cancel</md-icon> ${t('out_of_stock') || 'Habis'}</span>`;
+                    ? `<span class="stock-label stock-ok"><md-icon style="font-size:16px;">check_circle</md-icon> ${t('stock') || 'Stok:'} ${b.stock}</span>` 
+                    : `<span class="stock-label stock-empty"><md-icon style="font-size:16px;">cancel</md-icon> ${t('out_of_stock') || 'Habis'}</span>`;
 
                 let tagsHTML = '';
                 if (b.tags && b.tags.trim() !== '') {
                     const tagList = b.tags.split(',').map(tag => `<span class="static-chip">${tag.trim()}</span>`).join('');
-                    tagsHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; margin-bottom:8px;">${tagList}</div>`;
+                    tagsHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; margin-bottom:12px;">${tagList}</div>`;
                 }
 
                 return `
@@ -747,15 +834,15 @@
                     ${coverHTML}
                     <div class="book-info">
                         <div>
-                            <div style="font-weight:bold; font-size:1.1em; line-height:1.3; margin-bottom:4px;">${b.title}</div>
-                            <div style="font-size:12px; color:#666; margin-bottom: 4px;">${b.author}</div>
+                            <div style="font-weight:500; font-size:1.15em; line-height:1.4; color:var(--md-sys-color-on-surface); margin-bottom:6px;">${b.title}</div>
+                            <div style="font-size:13px; color:var(--md-sys-color-on-surface-variant); margin-bottom: 6px;">${b.author}</div>
                             ${tagsHTML}
-                            <div style="margin-top: 8px;">${stockBadge}</div>
+                            <div style="margin-top: 12px;">${stockBadge}</div>
                         </div>
-                        <div style="margin-top:12px; padding:4px 8px; background:rgba(103,80,164,0.1); color:var(--md-sys-color-primary); display:inline-block; border-radius:6px; font-size:12px; font-weight: 500; align-self: flex-start;">${t('borrowed') || 'Dipinjam'} ${b.borrow_count}x</div>
+                        <div style="margin-top:16px; padding:6px 12px; background:var(--md-sys-color-secondary-container); color:var(--md-sys-color-on-secondary-container); display:inline-block; border-radius:8px; font-size:12px; font-weight: 500; align-self: flex-start;">${t('borrowed') || 'Dipinjam'} ${b.borrow_count}x</div>
                     </div>
                 </div>
-            `}).join('') || `<p style="color: #666; grid-column: 1 / -1;">${t('empty_data') || 'Tidak ada data.'}</p>`;
+            `}).join('') || `<p style="color: var(--md-sys-color-on-surface-variant); grid-column: 1 / -1; font-size: 1.1rem;">${t('empty_data') || 'Tidak ada data.'}</p>`;
         }
 
         async function loadLatest() { renderGrid('latest-list', await (await fetch('/api/books/latest')).json()); }
@@ -771,7 +858,7 @@
                 tagsContainer.innerHTML = tags.split(',').map(tag => `<span class="static-chip">${tag.trim()}</span>`).join('');
                 tagsContainer.style.display = 'flex';
                 tagsContainer.style.flexWrap = 'wrap';
-                tagsContainer.style.gap = '6px';
+                tagsContainer.style.gap = '8px';
             } else {
                 tagsContainer.innerHTML = '';
                 tagsContainer.style.display = 'none';
@@ -792,22 +879,22 @@
             const books = await (await fetch('/api/books/latest')).json(); 
             document.getElementById('admin-book-list').innerHTML = books.map(b => {
                 const coverHTML = b.cover_image 
-                    ? `<img src="${b.cover_image}" class="book-cover" style="height:160px;" alt="Cover">`
-                    : `<div class="book-cover-placeholder" style="height:160px;"><span class="material-symbols-outlined" style="font-size:32px;">menu_book</span></div>`;
+                    ? `<img src="${b.cover_image}" class="book-cover" style="height:180px;" alt="Cover">`
+                    : `<div class="book-cover-placeholder" style="height:180px;"><span class="material-symbols-outlined" style="font-size:48px;">menu_book</span></div>`;
                 
                 let tagsHTML = '';
                 if (b.tags && b.tags.trim() !== '') {
                     const tagList = b.tags.split(',').map(tag => `<span class="static-chip">${tag.trim()}</span>`).join('');
-                    tagsHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">${tagList}</div>`;
+                    tagsHTML = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;">${tagList}</div>`;
                 }
 
                 return `
                 <div class="book-card" onclick="openPreview('${b.book_id}', '${b.title.replace(/'/g, "\\'")}', '${b.author.replace(/'/g, "\\'")}', '${b.cover_image || ''}', ${b.stock}, '${(b.tags || '').replace(/'/g, "\\'")}')">
                     ${coverHTML}
                     <div class="book-info">
-                        <div style="font-weight:bold; font-size:1em; margin-bottom:4px;">${b.title}</div>
+                        <div style="font-weight:500; font-size:1.1em; margin-bottom:6px; line-height:1.4;">${b.title}</div>
                         ${tagsHTML}
-                        <div style="font-size:11px; color:#666; margin-top:12px;">ID: ${b.book_id}</div>
+                        <div style="font-size:12px; color:var(--md-sys-color-on-surface-variant); margin-top:16px;">ID: ${b.book_id}</div>
                     </div>
                 </div>
             `}).join('');
@@ -866,21 +953,21 @@
             const users = await (await fetch('/api/admin/users')).json();
             document.getElementById('admin-user-list').innerHTML = users.map(u => {
                 const pfpHTML = u.photo 
-                    ? `<img src="${u.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">`
-                    : `<div style="width:40px; height:40px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; color:var(--md-sys-color-primary); border:1px solid var(--md-sys-color-outline);"><span class="material-symbols-outlined" style="font-size:20px;">person</span></div>`;
+                    ? `<img src="${u.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover;">`
+                    : `<div style="width:48px; height:48px; border-radius:50%; background:var(--md-sys-color-surface-variant); display:flex; align-items:center; justify-content:center; color:var(--md-sys-color-primary); border:1px solid var(--md-sys-color-outline-variant);"><span class="material-symbols-outlined" style="font-size:24px;">person</span></div>`;
                 return `
                 <div class="user-list-item">
-                    <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="display:flex; align-items:center; gap:20px;">
                         ${pfpHTML}
                         <div>
-                            <div style="font-weight:bold;">${u.username} <span style="font-size:10px; padding:2px 6px; background:#e0e0e0; border-radius:4px;">${u.role}</span></div>
-                            <div style="font-size:12px; color:#666;">${t('user_id_label') || 'ID: '}${u.member_id}</div>
+                            <div style="font-weight:500; font-size:1.1rem; margin-bottom:4px;">${u.username} <span style="font-size:11px; padding:4px 8px; background:var(--md-sys-color-surface-variant); border-radius:6px; font-weight:normal;">${u.role}</span></div>
+                            <div style="font-size:13px; color:var(--md-sys-color-on-surface-variant);">${t('user_id_label') || 'ID: '}${u.member_id}</div>
                         </div>
                     </div>
-                    <div style="display:flex; gap:8px;">
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content: flex-end;">
                         <md-text-button onclick="openUserLoans('${u.member_id}', '${u.username}')">${t('btn_loans') || 'Pinjaman'}</md-text-button>
                         <md-text-button onclick="openChangePwd('${u.member_id}')">${t('btn_password') || 'Ubah Sandi'}</md-text-button>
-                        <md-filled-button onclick="deleteUser('${u.member_id}')" style="--md-sys-color-primary: #b3261e;">${t('btn_delete') || 'Hapus'}</md-filled-button>
+                        <md-filled-tonal-button onclick="deleteUser('${u.member_id}')" style="--md-sys-color-secondary-container: var(--md-sys-color-error); --md-sys-color-on-secondary-container: var(--md-sys-color-on-error);">${t('btn_delete') || 'Hapus'}</md-filled-tonal-button>
                     </div>
                 </div>
             `}).join('');
@@ -897,12 +984,12 @@
                 detEl.innerHTML = loans.map(l => {
                     const isLate = l.days_passed > 7;
                     return `
-                    <div style="padding:12px; background:#f3edf7; border-radius:8px; border-left:4px solid var(--md-sys-color-primary); display:flex; justify-content:space-between; align-items:center;">
+                    <div style="padding:16px; background:var(--md-sys-color-surface-container); border-radius:12px; border-left:4px solid ${isLate ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-primary)'}; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <div style="font-weight:bold;">${l.title}</div>
-                            <div style="font-size:12px; color:#666;">${t('time_label') || 'Waktu: '} <b style="${isLate ? 'color:#b3261e;' : ''}">${Math.floor(l.days_passed)} ${t('days_label') || 'hari berlalu'}</b></div>
+                            <div style="font-weight:500; font-size:1.05rem; margin-bottom:4px;">${l.title}</div>
+                            <div style="font-size:13px; color:var(--md-sys-color-on-surface-variant);">${t('time_label') || 'Waktu: '} <b style="${isLate ? 'color:var(--md-sys-color-error);' : ''}">${Math.floor(l.days_passed)} ${t('days_label') || 'hari berlalu'}</b></div>
                         </div>
-                        <md-text-button onclick="openTimeMachine(${l.loan_id}, '${uid}', '${uname}')" style="--md-sys-color-primary: #b3261e; font-size:12px;">${t('btn_time_machine') || 'Mesin Waktu'}</md-text-button>
+                        <md-text-button onclick="openTimeMachine(${l.loan_id}, '${uid}', '${uname}')" style="--md-sys-color-primary: var(--md-sys-color-error);">${t('btn_time_machine') || 'Mesin Waktu'}</md-text-button>
                     </div>
                 `}).join('');
             }
@@ -946,8 +1033,85 @@
         }
 
         async function loadAdminStats() {
-            const data = await (await fetch('/api/admin/stats')).json();
-            document.getElementById('stat-books').innerText = data.books.c; document.getElementById('stat-users').innerText = data.users.c; document.getElementById('stat-loans').innerText = data.loans.c;
+            try {
+                const data = await (await fetch('/api/admin/stats')).json();
+                
+                const bookCount = data.books?.c ?? data.books ?? 0;
+                const userCount = data.users?.c ?? data.users ?? 0;
+                const loanCount = data.loans?.c ?? data.loans ?? 0;
+
+                document.getElementById('stat-books').innerText = bookCount;
+                document.getElementById('stat-users').innerText = userCount;
+                document.getElementById('stat-loans').innerText = loanCount;
+
+                if (data.chartData) {
+                    renderChart(data.chartData);
+                }
+            } catch(e) {
+                console.error("Gagal load API stats.", e);
+            }
+        }
+
+        function renderChart(backendData) {
+            const ctx = document.getElementById('loanActivityChart').getContext('2d');
+            
+            const labels = backendData?.labels || [];
+            const dataPoints = backendData?.data || [];
+
+            if (adminChart) {
+                adminChart.data.labels = labels;
+                adminChart.data.datasets[0].data = dataPoints;
+                adminChart.update();
+                return;
+            }
+
+            adminChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: t('books_borrowed') || 'Buku Dipinjam',
+                        data: dataPoints,
+                        borderColor: '#6750a4',
+                        backgroundColor: 'rgba(103, 80, 164, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4, 
+                        fill: true,
+                        pointBackgroundColor: '#6750a4',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(29, 25, 43, 0.9)',
+                            titleFont: { size: 14, family: 'Roboto' },
+                            bodyFont: { size: 14, family: 'Roboto' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { precision: 0 },
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            border: { display: false }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            border: { display: false }
+                        }
+                    }
+                }
+            });
         }
 
         async function doPinjam(bookId) {
@@ -959,11 +1123,11 @@
         async function loadMyLoans() {
             const loans = await (await fetch(`/api/my-loans/${memberId}`)).json();
             document.getElementById('loan-list').innerHTML = loans.map(l => `
-                <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #cac4d0; border-left: 6px solid #6750a4; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-                    <div><div style="font-weight:bold; font-size: 1.1em;">${l.title}</div><div style="font-size:13px; color:#666;">${(t('days_passed') || '{days} hari berlalu').replace('{days}', Math.floor(l.days_passed))}</div></div>
-                    <md-filled-button onclick="doKembali(${l.loan_id})">${t('return_btn') || 'Kembalikan'}</md-filled-button>
+                <div style="background: var(--md-sys-color-surface-container); padding: 20px; border-radius: 16px; border: 1px solid var(--md-sys-color-outline-variant); border-left: 8px solid var(--md-sys-color-primary); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><div style="font-weight:500; font-size: 1.15em; margin-bottom:6px;">${l.title}</div><div style="font-size:14px; color:var(--md-sys-color-on-surface-variant);">${(t('days_passed') || '{days} hari berlalu').replace('{days}', Math.floor(l.days_passed))}</div></div>
+                    <md-filled-tonal-button onclick="doKembali(${l.loan_id})">${t('return_btn') || 'Kembalikan'}</md-filled-tonal-button>
                 </div>
-            `).join('') || `<p style="color:#666;">${t('empty_data') || 'Tidak ada data.'}</p>`;
+            `).join('') || `<p style="color:var(--md-sys-color-on-surface-variant); font-size:1.1rem;">${t('empty_data') || 'Tidak ada data.'}</p>`;
         }
 
         async function doKembali(loanId) {

@@ -256,11 +256,54 @@ Tolong bantu pengguna dengan mengikuti panduan berikut ya:
       }
     }, adminApp => adminApp
       
-      .get('/api/admin/stats', () => ({
-        users: dbUsers.query('SELECT COUNT(*) as c FROM users').get() as { c: number },
-        books: dbBooks.query('SELECT COUNT(*) as c FROM books').get() as { c: number },
-        loans: dbLoans.query("SELECT COUNT(*) as c FROM loans WHERE status = 'PINJAM'").get() as { c: number }
-      }))
+      .get('/api/admin/stats', () => {
+        const usersCount = dbUsers.query('SELECT COUNT(*) as c FROM users').get() as { c: number };
+        const booksCount = dbBooks.query('SELECT COUNT(*) as c FROM books').get() as { c: number };
+        const loansCount = dbLoans.query("SELECT COUNT(*) as c FROM loans WHERE status = 'PINJAM'").get() as { c: number };
+
+        const chartLabels = [];
+        const chartDataPoints = [];
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const dateMap: Record<string, number> = {};
+
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+
+            const offset = d.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(d.getTime() - offset)).toISOString().slice(0, 10);
+
+            chartLabels.push(dayNames[d.getDay()]);
+            chartDataPoints.push(0);
+            dateMap[localISOTime] = 6 - i;
+        }
+
+        const startDate = Object.keys(dateMap)[0];
+        
+        const recentLoans = dbLoans.query(`
+            SELECT date(loan_date, 'localtime') as ld, COUNT(*) as c
+            FROM loans
+            WHERE date(loan_date, 'localtime') >= $start
+            GROUP BY date(loan_date, 'localtime')
+        `).all({ $start: startDate }) as any[];
+
+        for (const row of recentLoans) {
+            const idx = dateMap[row.ld];
+            if (idx !== undefined) {
+                chartDataPoints[idx] = row.c;
+            }
+        }
+
+        return {
+            users: usersCount,
+            books: booksCount,
+            loans: loansCount,
+            chartData: {
+                labels: chartLabels,
+                data: chartDataPoints
+            }
+        };
+      })
 
       .get('/api/admin/backup', ({ set }) => {
         let sqlDump = "--\n";
